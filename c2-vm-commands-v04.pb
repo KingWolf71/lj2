@@ -1,4 +1,4 @@
-﻿; -- lexical parser to VM for a simplified C Language 
+; -- lexical parser to VM for a simplified C Language 
 ; Tested in UTF8
 ; PBx64 v6.20
 ;
@@ -23,13 +23,12 @@ EndMacro
 
 ; Macro for built-in functions: pop N parameters from stack
 Macro                   vm_PopParams(n)
-   sp - n
+   sp - (n)
 EndMacro
 
 ; Macro for built-in functions: push integer result
 Macro                   vm_PushInt(value)
-   gVar(sp)\i = value
-   ;gVar(sp)\flags = #C2FLAG_INT
+   gVar( sp )\i = value
    sp + 1
    CompilerIf #DEBUG
       ;If sp % 100 = 0
@@ -37,6 +36,17 @@ Macro                   vm_PushInt(value)
       ;EndIf
    CompilerEndIf
    pc + 1
+EndMacro
+
+Macro                   vm_AssertPrint( tmsg )
+   CompilerIf #PB_Compiler_ExecutableFormat = #PB_Compiler_Console
+      gBatchOutput = gBatchOutput + tmsg + #LF$
+      PrintN(tmsg)
+   CompilerElse
+      AddGadgetItem(#edConsole, cy, tmsg)
+      cy + 1
+      cline = ""
+   CompilerEndIf
 EndMacro
 
 Procedure.s             Capitalize( sz.s, option.i = 0 )
@@ -82,44 +92,33 @@ EndProcedure
 
 Procedure               C2FetchPush()
    Protected varSlot.i
-   Protected callerSp.i
 
    vm_DebugFunctionName()
    varSlot = _AR()\i
-    
-   ; Check if this is a stack-local parameter AND we're in a function
-   If (gVar(varSlot)\flags & #C2FLAG_PARAM) And gFunctionDepth > 0
-      ; Read from stack at callerSp + paramOffset
-      callerSp = llStack()\sp
-      gVar( sp ) = gVar( callerSp + gVar(varSlot)\paramOffset )
+
+   ; Generic FETCH - only copy integer value (compiler should use FETCHS/FETCHF for typed variables)
+   If gVarMeta(varSlot)\paramOffset >= 0 And gFunctionDepth > 0
+      ; Read from Local array using paramOffset
+      gVar( sp )\i = llStack()\LocalInt(gVarMeta(varSlot)\paramOffset)
    Else
       ; Regular global variable
-      gVar( sp ) = gVar( varSlot )
+      gVar( sp )\i = gVar( varSlot )\i
    EndIf
 
    sp + 1
-
-   ;CompilerIf #DEBUG
-   ;   If sp % 100 = 0
-   ;      Debug "C2FetchPush: sp=" + Str(sp) + " / " + Str(#C2MAXCONSTANTS)
-   ;   EndIf
-   ;CompilerEndIf
-
    pc + 1
 EndProcedure
 
 Procedure               C2FETCHS()
    Protected varSlot.i
-   Protected callerSp.i
 
    vm_DebugFunctionName()
    varSlot = _AR()\i
 
-   ; Check if this is a stack-local parameter AND we're in a function
-   If (gVar(varSlot)\flags & #C2FLAG_PARAM) And gFunctionDepth > 0
-      ; Read from stack at callerSp + paramOffset
-      callerSp = llStack()\sp
-      gVar( sp )\ss = gVar( callerSp + gVar(varSlot)\paramOffset )\ss
+   ; Check if this is a parameter/local variable AND we're in a function
+   If gVarMeta(varSlot)\paramOffset >= 0 And gFunctionDepth > 0
+      ; Read from Local array using paramOffset
+      gVar( sp )\ss = llStack()\LocalString(gVarMeta(varSlot)\paramOffset)
    Else
       ; Regular global variable
       gVar( sp )\ss = gVar( varSlot )\ss
@@ -131,24 +130,18 @@ EndProcedure
 
 Procedure               C2FETCHF()
    Protected varSlot.i
-   Protected callerSp.i
 
    vm_DebugFunctionName()
    varSlot = _AR()\i
 
-   ;Debug "FETCHF BEFORE: sp=" + Str(sp) + " fetching gVar(" + Str(varSlot) + ")[" + gVar(varSlot)\name + "] f=" + StrD(gVar(varSlot)\f, 6)
-
-   ; Check if this is a stack-local parameter AND we're in a function
-   If (gVar(varSlot)\flags & #C2FLAG_PARAM) And gFunctionDepth > 0
-      ; Read from stack at callerSp + paramOffset
-      callerSp = llStack()\sp
-      gVar( sp )\f = gVar( callerSp + gVar(varSlot)\paramOffset )\f
+   ; Check if this is a parameter/local variable AND we're in a function
+   If gVarMeta(varSlot)\paramOffset >= 0 And gFunctionDepth > 0
+      ; Read from Local array using paramOffset
+      gVar( sp )\f = llStack()\LocalFloat(gVarMeta(varSlot)\paramOffset)
    Else
       ; Regular global variable
       gVar( sp )\f = gVar( varSlot )\f
    EndIf
-
-   ; Flag already set at compile time by PostProcessor
 
    sp + 1
    pc + 1
@@ -156,17 +149,15 @@ EndProcedure
 
 Procedure               C2POP()
    Protected varSlot.i
-   Protected callerSp.i
 
    vm_DebugFunctionName()
    sp - 1
    varSlot = _AR()\i
 
-   ; Check if this is a stack-local parameter AND we're in a function
-   If (gVar(varSlot)\flags & #C2FLAG_PARAM) And gFunctionDepth > 0
-      ; Write to stack at callerSp + paramOffset
-      callerSp = llStack()\sp
-      gVar( callerSp + gVar(varSlot)\paramOffset )\i = gVar( sp )\i
+   ; Check if this is a parameter/local variable AND we're in a function
+   If gVarMeta(varSlot)\paramOffset >= 0 And gFunctionDepth > 0
+      ; Write to Local array using paramOffset
+      llStack()\LocalInt(gVarMeta(varSlot)\paramOffset) = gVar( sp )\i
    Else
       ; Regular global variable - write to variable slot
       gVar( varSlot )\i = gVar( sp )\i
@@ -177,17 +168,15 @@ EndProcedure
 
 Procedure               C2POPS()
    Protected varSlot.i
-   Protected callerSp.i
 
    vm_DebugFunctionName()
    sp - 1
    varSlot = _AR()\i
 
-   ; Check if this is a stack-local parameter AND we're in a function
-   If (gVar(varSlot)\flags & #C2FLAG_PARAM) And gFunctionDepth > 0
-      ; Write to stack at callerSp + paramOffset
-      callerSp = llStack()\sp
-      gVar( callerSp + gVar(varSlot)\paramOffset )\ss = gVar( sp )\ss
+   ; Check if this is a parameter/local variable AND we're in a function
+   If gVarMeta(varSlot)\paramOffset >= 0 And gFunctionDepth > 0
+      ; Write to Local array using paramOffset
+      llStack()\LocalString(gVarMeta(varSlot)\paramOffset) = gVar( sp )\ss
    Else
       ; Regular global variable - write to variable slot
       gVar( varSlot )\ss = gVar( sp )\ss
@@ -198,17 +187,15 @@ EndProcedure
 
 Procedure               C2POPF()
    Protected varSlot.i
-   Protected callerSp.i
 
    vm_DebugFunctionName()
    sp - 1
    varSlot = _AR()\i
 
-   ; Check if this is a stack-local parameter AND we're in a function
-   If (gVar(varSlot)\flags & #C2FLAG_PARAM) And gFunctionDepth > 0
-      ; Write to stack at callerSp + paramOffset
-      callerSp = llStack()\sp
-      gVar( callerSp + gVar(varSlot)\paramOffset )\f = gVar( sp )\f
+   ; Check if this is a parameter/local variable AND we're in a function
+   If gVarMeta(varSlot)\paramOffset >= 0 And gFunctionDepth > 0
+      ; Write to Local array using paramOffset
+      llStack()\LocalFloat(gVarMeta(varSlot)\paramOffset) = gVar( sp )\f
    Else
       ; Regular global variable - write to variable slot
       gVar( varSlot )\f = gVar( sp )\f
@@ -219,16 +206,14 @@ EndProcedure
 
 Procedure               C2PUSHS()
    Protected varSlot.i
-   Protected callerSp.i
 
    vm_DebugFunctionName()
    varSlot = _AR()\i
 
-   ; Check if this is a stack-local parameter AND we're in a function
-   If (gVar(varSlot)\flags & #C2FLAG_PARAM) And gFunctionDepth > 0
-      ; Read from stack at callerSp + paramOffset
-      callerSp = llStack()\sp
-      gVar( sp )\ss = gVar( callerSp + gVar(varSlot)\paramOffset )\ss
+   ; Check if this is a parameter/local variable AND we're in a function
+   If gVarMeta(varSlot)\paramOffset >= 0 And gFunctionDepth > 0
+      ; Read from Local array using paramOffset
+      gVar( sp )\ss = llStack()\LocalString(gVarMeta(varSlot)\paramOffset)
    Else
       ; Regular global variable
       gVar( sp )\ss = gVar( varSlot )\ss
@@ -240,16 +225,14 @@ EndProcedure
 
 Procedure               C2PUSHF()
    Protected varSlot.i
-   Protected callerSp.i
 
    vm_DebugFunctionName()
    varSlot = _AR()\i
 
-   ; Check if this is a stack-local parameter AND we're in a function
-   If (gVar(varSlot)\flags & #C2FLAG_PARAM) And gFunctionDepth > 0
-      ; Read from stack at callerSp + paramOffset
-      callerSp = llStack()\sp
-      gVar( sp )\f = gVar( callerSp + gVar(varSlot)\paramOffset )\f
+   ; Check if this is a parameter/local variable AND we're in a function
+   If gVarMeta(varSlot)\paramOffset >= 0 And gFunctionDepth > 0
+      ; Read from Local array using paramOffset
+      gVar( sp )\f = llStack()\LocalFloat(gVarMeta(varSlot)\paramOffset)
    Else
       ; Regular global variable
       gVar( sp )\f = gVar( varSlot )\f
@@ -261,17 +244,15 @@ EndProcedure
 
 Procedure               C2Store()
    Protected varSlot.i
-   Protected callerSp.i
 
    vm_DebugFunctionName()
    sp - 1
    varSlot = _AR()\i
 
-   ; Check if this is a stack-local parameter AND we're in a function
-   If (gVar(varSlot)\flags & #C2FLAG_PARAM) And gFunctionDepth > 0
-      ; Write to stack at callerSp + paramOffset
-      callerSp = llStack()\sp
-      gVar( callerSp + gVar(varSlot)\paramOffset )\i = gVar( sp )\i
+   ; Check if this is a parameter/local variable AND we're in a function
+   If gVarMeta(varSlot)\paramOffset >= 0 And gFunctionDepth > 0
+      ; Write to Local array using paramOffset
+      llStack()\LocalInt(gVarMeta(varSlot)\paramOffset) = gVar( sp )\i
    Else
       ; Regular global variable - write to variable slot
       gVar( varSlot )\i = gVar( sp )\i
@@ -282,17 +263,15 @@ EndProcedure
 
 Procedure               C2STORES()
    Protected varSlot.i
-   Protected callerSp.i
 
    vm_DebugFunctionName()
    sp - 1
    varSlot = _AR()\i
 
-   ; Check if this is a stack-local parameter AND we're in a function
-   If (gVar(varSlot)\flags & #C2FLAG_PARAM) And gFunctionDepth > 0
-      ; Write to stack at callerSp + paramOffset
-      callerSp = llStack()\sp
-      gVar( callerSp + gVar(varSlot)\paramOffset )\ss = gVar( sp )\ss
+   ; Check if this is a parameter/local variable AND we're in a function
+   If gVarMeta(varSlot)\paramOffset >= 0 And gFunctionDepth > 0
+      ; Write to Local array using paramOffset
+      llStack()\LocalString(gVarMeta(varSlot)\paramOffset) = gVar( sp )\ss
    Else
       ; Regular global variable - write to variable slot
       gVar( varSlot )\ss = gVar( sp )\ss
@@ -303,17 +282,15 @@ EndProcedure
 
 Procedure               C2STOREF()
    Protected varSlot.i
-   Protected callerSp.i
 
    vm_DebugFunctionName()
    sp - 1
    varSlot = _AR()\i
 
-   ; Check if this is a stack-local parameter AND we're in a function
-   If (gVar(varSlot)\flags & #C2FLAG_PARAM) And gFunctionDepth > 0
-      ; Write to stack at callerSp + paramOffset
-      callerSp = llStack()\sp
-      gVar( callerSp + gVar(varSlot)\paramOffset )\f = gVar( sp )\f
+   ; Check if this is a parameter/local variable AND we're in a function
+   If gVarMeta(varSlot)\paramOffset >= 0 And gFunctionDepth > 0
+      ; Write to Local array using paramOffset
+      llStack()\LocalFloat(gVarMeta(varSlot)\paramOffset) = gVar( sp )\f
    Else
       ; Regular global variable - write to variable slot
       gVar( varSlot )\f = gVar( sp )\f
@@ -343,41 +320,41 @@ EndProcedure
 ;- Local Variable Opcodes (use LocalVars array, no flag checks)
 Procedure               C2LMOV()
    vm_DebugFunctionName()
-   ; Direct array access: LocalVars(offset) = source
-   llStack()\LocalVars(_AR()\i)\i = gVar( _AR()\j )\i
+   ; Copy from global to local: LocalInt(offset) = gVarInt(global_index)
+   llStack()\LocalInt(_AR()\i) = gVar( _AR()\j )\i
    pc + 1
 EndProcedure
 
 Procedure               C2LMOVS()
    vm_DebugFunctionName()
-   llStack()\LocalVars(_AR()\i)\ss = gVar( _AR()\j )\ss
+   llStack()\LocalString(_AR()\i) = gVar( _AR()\j )\ss
    pc + 1
 EndProcedure
 
 Procedure               C2LMOVF()
    vm_DebugFunctionName()
-   llStack()\LocalVars(_AR()\i)\f = gVar( _AR()\j )\f
+   llStack()\LocalFloat(_AR()\i) = gVar( _AR()\j )\f
    pc + 1
 EndProcedure
 
 Procedure               C2LFETCH()
    vm_DebugFunctionName()
-   ; Fetch local variable to stack
-   gVar( sp ) = llStack()\LocalVars(_AR()\i)
+   ; Fetch local integer variable to stack
+   gVar( sp )\i = llStack()\LocalInt(_AR()\i)
    sp + 1
    pc + 1
 EndProcedure
 
 Procedure               C2LFETCHS()
    vm_DebugFunctionName()
-   gVar( sp )\ss = llStack()\LocalVars(_AR()\i)\ss
+   gVar( sp )\ss = llStack()\LocalString(_AR()\i)
    sp + 1
    pc + 1
 EndProcedure
 
 Procedure               C2LFETCHF()
    vm_DebugFunctionName()
-   gVar( sp )\f = llStack()\LocalVars(_AR()\i)\f
+   gVar( sp )\f = llStack()\LocalFloat(_AR()\i)
    sp + 1
    pc + 1
 EndProcedure
@@ -386,21 +363,21 @@ Procedure               C2LSTORE()
    vm_DebugFunctionName()
    ; Store from stack to local variable
    sp - 1
-   llStack()\LocalVars(_AR()\i) = gVar( sp )
+   llStack()\LocalInt(_AR()\i) = gVar( sp )\i
    pc + 1
 EndProcedure
 
 Procedure               C2LSTORES()
    vm_DebugFunctionName()
    sp - 1
-   llStack()\LocalVars(_AR()\i)\ss = gVar( sp )\ss
+   llStack()\LocalString(_AR()\i) = gVar( sp )\ss
    pc + 1
 EndProcedure
 
 Procedure               C2LSTOREF()
    vm_DebugFunctionName()
    sp - 1
-   llStack()\LocalVars(_AR()\i)\f = gVar( sp )\f
+   llStack()\LocalFloat(_AR()\i) = gVar( sp )\f
    pc + 1
 EndProcedure
 
@@ -412,11 +389,30 @@ EndProcedure
 Procedure               C2JZ()
    vm_DebugFunctionName()
    sp - 1
-   If Not gVar( sp )\i
+   If Not gVar(sp)\i
       pc + _AR()\i
    Else
       pc + 1
    EndIf
+EndProcedure
+
+Procedure               C2TENIF()
+   ; Ternary IF: Jump if condition is false (0)
+   ; Identical to C2JZ but with distinct opcode for ternary expressions
+   vm_DebugFunctionName()
+   sp - 1
+   If Not gVar(sp)\i
+      pc + _AR()\i
+   Else
+      pc + 1
+   EndIf
+EndProcedure
+
+Procedure               C2TENELSE()
+   ; Ternary ELSE: Unconditional jump past false branch
+   ; Identical to C2JMP but with distinct opcode for ternary expressions
+   vm_DebugFunctionName()
+   pc + _AR()\i
 EndProcedure
 
 Procedure               C2ADD()
@@ -426,31 +422,12 @@ EndProcedure
 
 Procedure               C2ADDSTR()
    vm_DebugFunctionName()
-   Protected leftStr.s, rightStr.s
 
    sp - 1
 
-   ; Convert left operand (sp-1) to string based on its type
-   If gVar(sp - 1)\flags & #C2FLAG_STR
-      leftStr = gVar(sp - 1)\ss
-   ElseIf gVar(sp - 1)\flags & #C2FLAG_FLOAT
-      leftStr = StrD(gVar(sp - 1)\f, gDecs)
-   Else
-      leftStr = Str(gVar(sp - 1)\i)
-   EndIf
-
-   ; Convert right operand (sp) to string based on its type
-   If gVar(sp)\flags & #C2FLAG_STR
-      rightStr = gVar(sp)\ss
-   ElseIf gVar(sp)\flags & #C2FLAG_FLOAT
-      rightStr = StrD(gVar(sp)\f, gDecs)
-   Else
-      rightStr = Str(gVar(sp)\i)
-   EndIf
-
-   ; Concatenate and store result
-   gVar(sp - 1)\ss = leftStr + rightStr
-   ; Flag already set at compile time by PostProcessor
+   ; Both operands are guaranteed to be strings by PostProcessor conversions
+   ; Simply concatenate the two string fields
+   gVar(sp - 1)\ss = gVar(sp - 1)\ss + gVar(sp)\ss
 
    pc + 1
 EndProcedure
@@ -466,6 +443,20 @@ Procedure               C2ITOS()
    vm_DebugFunctionName()
    ; Convert integer to string at stack top
    gVar(sp - 1)\ss = Str(gVar(sp - 1)\i)
+   pc + 1
+EndProcedure
+
+Procedure               C2ITOF()
+   vm_DebugFunctionName()
+   ; Convert integer to float at stack top
+   gVar(sp - 1)\f = gVar(sp - 1)\i
+   pc + 1
+EndProcedure
+
+Procedure               C2FTOI()
+   vm_DebugFunctionName()
+   ; Convert float to integer at stack top
+   gVar(sp - 1)\i = gVar(sp - 1)\f
    pc + 1
 EndProcedure
 
@@ -532,7 +523,7 @@ EndProcedure
 
 Procedure               C2NEGATE()
    vm_DebugFunctionName()
-   gVar( sp - 1 )\i = -gVar( sp -1 )\i
+   gVar( sp - 1 )\i = -gVar( sp - 1 )\i
    pc + 1
 EndProcedure
 
@@ -554,7 +545,9 @@ Procedure               C2PRTS()
       Print(gVar(sp)\ss)  ; Echo to console
    CompilerElse
       cline = cline + gVar(sp)\ss
-      SetGadgetItemText( #edConsole, cy, cline )
+      If gFastPrint = #False
+         SetGadgetItemText( #edConsole, cy, cline )
+      EndIf
    CompilerEndIf
    pc + 1
 EndProcedure
@@ -567,7 +560,9 @@ Procedure               C2PRTI()
       Print(Str( gVar( sp )\i ))  ; Echo to console
    CompilerElse
       cline = cline + Str( gVar( sp )\i )
-      SetGadgetItemText( #edConsole, cy, cline )
+      If gFastPrint = #False
+         SetGadgetItemText( #edConsole, cy, cline )
+      EndIf
    CompilerEndIf
    pc + 1
 EndProcedure
@@ -576,11 +571,13 @@ Procedure               C2PRTF()
    vm_DebugFunctionName()
    sp - 1
    CompilerIf #PB_Compiler_ExecutableFormat = #PB_Compiler_Console
-      gBatchOutput + StrD( gVar( sp )\f, gDecs )
-      Print(StrD( gVar( sp )\f, gDecs ))  ; Echo to console
+      gBatchOutput + StrD( gVar(sp)\f, gDecs )
+      Print(StrD( gVar(sp)\f, gDecs ))  ; Echo to console
    CompilerElse
-      cline = cline + StrD( gVar( sp )\f, gDecs )
-      SetGadgetItemText( #edConsole, cy, cline)
+      cline = cline + StrD( gVar(sp)\f, gDecs )
+      If gFastPrint = #False
+         SetGadgetItemText( #edConsole, cy, cline )
+      EndIf
    CompilerEndIf
    pc + 1
 EndProcedure
@@ -594,12 +591,18 @@ Procedure               C2PRTC()
       If gVar( sp )\i = 10 : PrintN( "" ) : EndIf
    CompilerElse
       If gVar( sp )\i = 10
+         If gFastPrint = #True
+            SetGadgetItemText( #edConsole, cy, cline )
+         EndIf
+         
          cy + 1
          cline = ""
          AddGadgetItem( #edConsole, -1, "" )
       Else
          cline = cline + Chr( gVar( sp )\i )
-         SetGadgetItemText( #edConsole, cy, cline )
+         If gFastPrint = #False
+            SetGadgetItemText( #edConsole, cy, cline )
+         EndIf
       EndIf
    CompilerEndIf
    pc + 1
@@ -607,7 +610,7 @@ EndProcedure
 
 Procedure               C2FLOATNEGATE()
    vm_DebugFunctionName()
-   gVar(sp-1)\f = -gVar(sp-1)\f
+   gVar(sp - 1)\f = -gVar(sp - 1)\f
    pc + 1
 EndProcedure
 
@@ -652,12 +655,26 @@ EndProcedure
 
 Procedure               C2FLOATNOTEQUAL()
    vm_DebugFunctionName()
-   vm_FloatComparators( <> )
+   sp - 1
+   ; Tolerance-based float inequality: NOT equal if difference > tolerance
+   If Abs(gVar(sp - 1)\f - gVar( sp )\f) > gFloatTolerance
+      gVar(sp - 1)\i = 1
+   Else
+      gVar(sp - 1)\i = 0
+   EndIf
+   pc + 1
 EndProcedure
 
 Procedure               C2FLOATEQUAL()
    vm_DebugFunctionName()
-   vm_FloatComparators( = )
+   sp - 1
+   ; Tolerance-based float equality: equal if difference <= tolerance
+   If Abs(gVar(sp - 1)\f - gVar(sp)\f ) <= gFloatTolerance
+      gVar( sp - 1)\i = 1
+   Else
+      gVar(sp - 1)\i = 0
+   EndIf
+   pc + 1
 EndProcedure
 
 Procedure               C2CALL()
@@ -675,16 +692,26 @@ Procedure               C2CALL()
    llStack()\pc = pc + 1
    llStack()\sp = sp - nParams  ; Save sp BEFORE params were pushed (FIX: prevents stack leak)
 
-   ; Allocate LocalVars array for this function call (params + locals)
+   ; Allocate separate Local arrays for this function call (params + locals)
    If totalVars > 0
-      ReDim llStack()\LocalVars(totalVars - 1)
+      ReDim llStack()\LocalInt(totalVars - 1)
+      ReDim llStack()\LocalFloat(totalVars - 1)
+      ReDim llStack()\LocalString(totalVars - 1)
 
-      ; Copy parameters from stack into LocalVars array
+      ; Copy parameters from stack into Local arrays
       paramSp = sp - nParams
       For i = 0 To nParams - 1
-         llStack()\LocalVars(i) = gVar(paramSp + i)
+         llStack()\LocalInt(i) = gVar(paramSp + i)\i
+         llStack()\LocalFloat(i) = gVar(paramSp + i)\f
+         llStack()\LocalString(i) = gVar(paramSp + i)\ss
       Next
-      ; Note: Local variables (indices nParams to totalVars-1) are uninitialized
+      
+      ; Clear the stack positions that held parameters (prevents garbage in next call)
+      ;For i = paramSp To sp - 1
+      ;   gVarInt(i) = 0
+      ;   gVarFloat(i) = 0.0
+      ;   gVarString(i) = ""
+      ;Next
    EndIf
 
    pc = _AR()\i
@@ -694,18 +721,16 @@ EndProcedure
 
 Procedure               C2Return()
    vm_DebugFunctionName()
-   Protected returnValue.stVT
+   Protected returnValue.i
    Protected callerSp.i
 
    ; Initialize to default integer 0 (prevents uninitialized returns)
-   returnValue\i = 0
-   returnValue\flags = #C2FLAG_INT
-
+   returnValue = 0
    callerSp = llStack()\sp
 
    ; Save return value from top of stack (sp-1) if there's anything on function's stack
    If sp > callerSp
-      returnValue = gVar(sp - 1)
+      returnValue = gVar(sp - 1)\i
    EndIf
 
    ; Restore caller's program counter and stack pointer
@@ -715,7 +740,7 @@ Procedure               C2Return()
    gFunctionDepth - 1  ; Decrement function depth counter
 
    ; Push return value onto caller's stack
-   gVar(sp) = returnValue
+   gVar( sp )\i = returnValue
    sp + 1
 EndProcedure
 
@@ -723,19 +748,18 @@ Procedure               C2ReturnF()
    vm_DebugFunctionName()
 
    ; Float return - preserves float return value from stack
-   Protected returnValue.stVT
+   Protected returnValue.f
    Protected callerSp.i
 
    ; Initialize to default float 0.0
-   returnValue\f = 0.0
-   returnValue\flags = #C2FLAG_FLOAT
+   returnValue = 0.0
 
    ; Save caller's stack pointer
    callerSp = llStack()\sp
 
    ; Save float return value from top of stack (sp-1) if there's anything on function's stack
    If sp > callerSp
-      returnValue = gVar(sp - 1)
+      returnValue = gVar(sp - 1)\f
    EndIf
 
    ; Restore caller's program counter and stack pointer
@@ -745,7 +769,7 @@ Procedure               C2ReturnF()
    gFunctionDepth - 1  ; Decrement function depth counter
 
    ; Push float return value onto caller's stack
-   gVar(sp) = returnValue
+   gVar( sp )\f = returnValue
    sp + 1
 EndProcedure
 
@@ -753,19 +777,18 @@ Procedure               C2ReturnS()
    vm_DebugFunctionName()
 
    ; String return - preserves string return value from stack
-   Protected returnValue.stVT
+   Protected returnValue.s
    Protected callerSp.i
 
    ; Initialize to default empty string
-   returnValue\ss = ""
-   returnValue\flags = #C2FLAG_STR
+   returnValue = ""
 
    ; Save caller's stack pointer
    callerSp = llStack()\sp
 
    ; Save string return value from top of stack (sp-1) if there's anything on function's stack
    If sp > callerSp
-      returnValue = gVar(sp - 1)
+      returnValue = gVar(sp - 1)\ss
    EndIf
 
    ; Restore caller's program counter and stack pointer
@@ -775,7 +798,7 @@ Procedure               C2ReturnS()
    gFunctionDepth - 1  ; Decrement function depth counter
 
    ; Push string return value onto caller's stack
-   gVar(sp) = returnValue
+   gVar( sp )\ss = returnValue
    sp + 1
 EndProcedure
 
@@ -876,6 +899,104 @@ Procedure C2BUILTIN_MAX()
    vm_PushInt(result)
 EndProcedure
 
+; assertEqual(expected, actual) - Assert integers are equal
+Procedure C2BUILTIN_ASSERT_EQUAL()
+   vm_DebugFunctionName()
+   Protected paramCount.i = vm_GetParamCount()
+   Protected expected.i, actual.i, result.i
+   Protected message.s
+
+   If paramCount >= 2
+      actual = gVar(sp - 1)\i
+      expected = gVar(sp - 2)\i
+
+      If expected = actual
+         message = "[PASS] assertEqual: " + Str(expected) + " == " + Str(actual)
+         result = 1
+      Else
+         message = "[FAIL] assertEqual: expected " + Str(expected) + " but got " + Str(actual)
+         result = 0
+      EndIf
+
+      vm_PopParams(paramCount)
+   Else
+      message = "[FAIL] assertEqual: requires 2 parameters"
+      result = 0
+      vm_PopParams(paramCount)
+   EndIf
+
+   vm_AssertPrint( message )
+   pc + 1
+EndProcedure
+
+; assertFloatEqual(expected, actual, tolerance) - Assert floats are equal within tolerance
+; If tolerance is omitted, uses #pragma floattolerance value (default: 0.00001)
+Procedure C2BUILTIN_ASSERT_FLOAT()
+   vm_DebugFunctionName()
+   Protected paramCount.i = vm_GetParamCount()
+   Protected expected.d, actual.d, tolerance.d, result.i
+   Protected message.s
+
+   If paramCount >= 2
+      If paramCount >= 3
+         tolerance = gVar(sp - 1)\f
+         actual = gVar(sp - 2)\f
+         expected = gVar(sp - 3)\f
+      Else
+         tolerance = gFloatTolerance
+         actual = gVar(sp - 1)\f
+         expected = gVar(sp - 2)\f
+      EndIf
+
+      If Abs(expected - actual) <= tolerance
+         message = "[PASS] assertFloatEqual: " + StrD(expected, gDecs) + " ~= " + StrD(actual, gDecs) + " (tol=" + StrD(tolerance, gDecs) + ")"
+         result = 1
+      Else
+         message = "[FAIL] assertFloatEqual: expected " + StrD(expected, gDecs) + " but got " + StrD(actual, gDecs) + " (diff=" + StrD(Abs(expected - actual), gDecs) + ", tol=" + StrD(tolerance, gDecs) + ")"
+         result = 0
+      EndIf
+
+      vm_PopParams(paramCount)
+   Else
+      message = "[FAIL] assertFloatEqual: requires 2-3 parameters"
+      result = 0
+      vm_PopParams(paramCount)
+   EndIf
+
+   vm_AssertPrint( message )
+   pc + 1
+EndProcedure
+
+; assertStringEqual(expected, actual) - Assert strings are equal
+Procedure C2BUILTIN_ASSERT_STRING()
+   vm_DebugFunctionName()
+   Protected paramCount.i = vm_GetParamCount()
+   Protected expected.s, actual.s, result.i
+   Protected message.s
+
+   If paramCount >= 2
+      actual = gVar(sp - 1)\ss
+      expected = gVar(sp - 2)\ss
+
+      If expected = actual
+         message = ~"[PASS] assertStringEqual: \"" + expected + ~"\" == \"" + actual + ~"\""
+         result = 1
+      Else
+         message = ~"[FAIL] assertStringEqual: expected \"" + expected + ~"\" but got \"" + actual + ~"\""
+         result = 0
+      EndIf
+
+      vm_PopParams(paramCount)
+   Else
+      message = "[FAIL] assertStringEqual: requires 2 parameters"
+      result = 0
+      vm_PopParams(paramCount)
+   EndIf
+
+   vm_AssertPrint( message )
+   pc + 1
+EndProcedure
+
 Procedure               C2NOOP()
    vm_DebugFunctionName()
    ; No operation - just advance program counter
@@ -890,9 +1011,10 @@ EndProcedure
 
 ;- End VM functions
 ; IDE Options = PureBasic 6.21 (Windows - x64)
-; CursorPosition = 667
-; FirstLine = 656
-; Folding = --------------
+; CursorPosition = 910
+; FirstLine = 902
+; Folding = ---------------
+; Markers = 929
 ; EnableAsm
 ; EnableThread
 ; EnableXP

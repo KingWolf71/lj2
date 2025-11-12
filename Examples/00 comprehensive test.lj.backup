@@ -1,4 +1,4 @@
-﻿/* =============================================================================
+/* =============================================================================
    LJ2 Comprehensive Feature Test Suite
    Tests ALL compiler features systematically
    ============================================================================= */
@@ -9,8 +9,6 @@
 #pragma ListASM on
 #pragma version
 #pragma floattolerance 0.00001
-#pragma FastPrint on
-#pragma RunThreaded on
 
 print("LJ2 COMPREHENSIVE FEATURE TEST SUITE");
 print("-------------------------------------");
@@ -33,44 +31,36 @@ print("-----------------------------------");
 // Integer literals
 print("Test: Positive integer literal assignment, Expected: 42");
 testInt = 42;
-print("Test: testInt = 42");
 assertEqual(42, testInt);
 
 print("Test: Negative integer literal assignment, Expected: -17");
 testNegInt = -17;
-print("Test: testNegInt = -17");
 assertEqual(-17, testNegInt);
 
 print("Test: Zero integer literal assignment, Expected: 0");
 testZero = 0;
-print("Test: testZero = 0");
 assertEqual(0, testZero);
 
 // Float literals
 print("Test: Positive float literal assignment, Expected: 3.14159");
 testFloat.f = 3.14159;
-print("Test: testFloat ~= 3.14159 (float)");
 assertFloatEqual(3.14159, testFloat);
 
 print("Test: Negative float literal assignment, Expected: -2.718");
 testNegFloat.f = -2.718;
-print("Test: testNegFloat ~= -2.718 (float)");
 assertFloatEqual(-2.718, testNegFloat);
 
 print("Test: Zero float literal assignment, Expected: 0.0");
 testFloatZero.f = 0.0;
-print("Test: testFloatZero ~= 0.0 (float)");
 assertFloatEqual(0.0, testFloatZero);
 
 // String literals
 print("Test: String literal assignment, Expected: Hello, World!");
 testStr.s = "Hello, World!";
-print("Hello (string)", "Test: World!", testStr);
 assertStringEqual("Hello, World!", testStr);
 
 print("Test: Empty string literal assignment, Expected: (empty)");
 testEmptyStr.s = "";
-print("Test: testEmptyStr = '' (string)");
 assertStringEqual("", testEmptyStr);
 
 /* =============================================================================
@@ -85,37 +75,31 @@ b = 7;
 // Addition
 print("Test: Integer addition (20 + 7), Expected: 27");
 resultAdd = a + b;
-print("Test: resultAdd = 27");
 assertEqual(27, resultAdd);
 
 // Subtraction
 print("Test: Integer subtraction (20 - 7), Expected: 13");
 resultSub = a - b;
-print("Test: resultSub = 13");
 assertEqual(13, resultSub);
 
 // Multiplication
 print("Test: Integer multiplication (20 * 7), Expected: 140");
 resultMul = a * b;
-print("Test: resultMul = 140");
 assertEqual(140, resultMul);
 
 // Division
 print("Test: Integer division (20 / 7), Expected: 2");
 resultDiv = a / b;
-print("Test: resultDiv = 2");
 assertEqual(2, resultDiv);
 
 // Modulo
 print("Test: Modulo operation (20 % 7), Expected: 6");
 resultMod = a % b;
-print("Test: resultMod = 6");
 assertEqual(6, resultMod);
 
 // Negative operands
 print("Test: Negative operand arithmetic (-10 + 5), Expected: -5");
 negResult = -10 + 5;
-print("Test: negResult = -5");
 assertEqual(-5, negResult);
 
 // Float arithmetic
@@ -123,13 +107,11 @@ print("Test: Float multiplication (10.5 * 2.5), Expected: 26.25");
 floatA.f = 10.5;
 floatB.f = 2.5;
 floatResult.f = floatA * floatB;
-print("Test: floatResult ~= 26.25 (float)");
 assertFloatEqual(26.25, floatResult);
 
 // Mixed int/float
 print("Test: Mixed int/float addition (10 + 2.5), Expected: 12.5");
 mixedResult.f = 10 + 2.5;
-print("Test: mixedResult ~= 12.5 (float)");
 assertFloatEqual(12.5, mixedResult);
 
 /* =============================================================================
@@ -145,37 +127,31 @@ z = 10;
 // Less than
 print("Test: Less than (10 < 20), Expected: 1");
 testLT = (x < y);
-print("Test: testLT = 1");
 assertEqual(1, testLT);
 
 // Greater than
 print("Test: Greater than (20 > 10), Expected: 1");
 testGT = (y > x);
-print("Test: testGT = 1");
 assertEqual(1, testGT);
 
 // Less than or equal
 print("Test: Less than or equal (10 <= 10), Expected: 1");
 testLE = (x <= z);
-print("Test: testLE = 1");
 assertEqual(1, testLE);
 
 // Greater than or equal
 print("Test: Greater than or equal (20 >= 10), Expected: 1");
 testGE = (y >= x);
-print("Test: testGE = 1");
 assertEqual(1, testGE);
 
 // Equality
 print("Test: Equality (10 == 10), Expected: 1");
 testEQ = (x == z);
-print("Test: testEQ = 1");
 assertEqual(1, testEQ);
 
 // Inequality
 print("Test: Inequality (10 != 20), Expected: 1");
 testNE = (x != y);
-print("Test: testNE = 1");
 assertEqual(1, testNE);
 
 // Float comparisons
@@ -183,7 +159,6 @@ print("Test: Float equality (3.14 == 3.14), Expected: 1");
 f1.f = 3.14;
 f2.f = 3.14;
 testFloatEQ = (f1 == f2);
-print("Test: testFloatEQ = 1");
 assertEqual(1, testFloatEQ);
 
 /* =============================================================================
@@ -199,19 +174,16 @@ r = 25;
 // AND operator
 print("Test: AND operator (5 < 15 && 15 < 25), Expected: 1");
 testAND = (p < q && q < r);
-print("Test: testAND = 1");
 assertEqual(1, testAND);
 
 // OR operator
 print("Test: OR operator (5 > 100 || 15 < 20), Expected: 1");
 testOR = (p > 100 || q < 20);
-print("Test: testOR = 1");
 assertEqual(1, testOR);
 
 // Complex logical expression
 print("Test: Complex logical ((5 < 15 && 15 < 25) || 5 == 5), Expected: 1");
 testComplex = ((p < q && q < r) || p == 5);
-print("Test: testComplex = 1");
 assertEqual(1, testComplex);
 
 // Nested conditions
@@ -219,7 +191,6 @@ print("Test: Nested conditions (true && true), Expected: 1");
 testNested1 = (p < q);
 testNested2 = (q < r);
 testNestedResult = (testNested1 && testNested2);
-print("Test: testNestedResult = 1");
 assertEqual(1, testNestedResult);
 
 /* =============================================================================
@@ -322,7 +293,6 @@ func greet() {
 
 print("Test: Function with no parameters greet(), Expected: 42");
 greeting = greet();
-print("Test: greeting = 42");
 assertEqual(42, greeting);
 
 // Function with one parameter
@@ -332,7 +302,6 @@ func square(n) {
 
 print("Test: Function square(5), Expected: 25");
 sq5 = square(5);
-print("Test: sq5 = 25");
 assertEqual(25, sq5);
 
 // Function with two parameters
@@ -342,7 +311,6 @@ func add(a, b) {
 
 print("Test: Function add(7, 5), Expected: 12");
 sum12 = add(7, 5);
-print("Test: sum12 = 12");
 assertEqual(12, sum12);
 
 // Function with three parameters
@@ -352,7 +320,6 @@ func volume(length, width, height) {
 
 print("Test: Function volume(3, 4, 5), Expected: 60");
 vol = volume(3, 4, 5);
-print("Test: vol = 60");
 assertEqual(60, vol);
 
 // Function returning float
@@ -362,7 +329,6 @@ func divide(a, b) {
 
 print("Test: Function divide(22, 7), Expected: 3");
 divResult = divide(22, 7);
-print("Test: divResult = 3");
 assertEqual(3, divResult);
 
 /* =============================================================================
@@ -380,11 +346,9 @@ func factorial(n) {
 }
 
 fact5 = factorial(5);
-print("Test: fact5 = 120");
 assertEqual(120, fact5);
 
 fact7 = factorial(7);
-print("Test: fact7 = 5040");
 assertEqual(5040, fact7);
 
 // Fibonacci
@@ -396,11 +360,9 @@ func fibonacci(n) {
 }
 
 fib8 = fibonacci(8);
-print("Test: fib8 = 21");
 assertEqual(21, fib8);
 
 fib10 = fibonacci(10);
-print("Test: fib10 = 55");
 assertEqual(55, fib10);
 
 // Sum of digits (recursive)
@@ -412,7 +374,6 @@ func sumDigits(n) {
 }
 
 digitSum = sumDigits(12345);
-print("Test: digitSum = 15");
 assertEqual(15, digitSum);
 
 /* =============================================================================
@@ -431,17 +392,14 @@ func triple(n) {
 
 // Nested function calls
 nested1 = double(triple(5));
-print("Test: nested1 = 30");
 assertEqual(30, nested1);
 
 // Triple nesting
 nested2 = double(double(double(3)));
-print("Test: nested2 = 24");
 assertEqual(24, nested2);
 
 // Mix with arithmetic
 nested3 = add(square(4), square(3));
-print("Test: nested3 = 25");
 assertEqual(25, nested3);
 
 // Complex nesting
@@ -450,7 +408,6 @@ func compute(a, b, c) {
 }
 
 nested4 = compute(square(2), triple(3), double(5));
-print("Test: nested4 = 46");
 assertEqual(46, nested4);
 
 /* =============================================================================
@@ -470,15 +427,12 @@ func classify(n) {
 }
 
 class1 = classify(-10);
-print("Test: class1 = -1");
 assertEqual(-1, class1);
 
 class2 = classify(0);
-print("Test: class2 = 0");
 assertEqual(0, class2);
 
 class3 = classify(42);
-print("Test: class3 = 1");
 assertEqual(1, class3);
 
 // Early return
@@ -494,7 +448,6 @@ func findFirst(target) {
 }
 
 found = findFirst(17);
-print("Test: found = 17");
 assertEqual(17, found);
 
 /* =============================================================================
@@ -505,33 +458,26 @@ print("------------------------------");
 
 // abs()
 absNeg = abs(-42);
-print("Test: absNeg = 42");
 assertEqual(42, absNeg);
 
 absPos = abs(17);
-print("Test: absPos = 17");
 assertEqual(17, absPos);
 
 absZero = abs(0);
-print("Test: absZero = 0");
 assertEqual(0, absZero);
 
 // min()
 minVal = min(15, 23);
-print("Test: minVal = 15");
 assertEqual(15, minVal);
 
 minNeg = min(-5, -10);
-print("Test: minNeg = -10");
 assertEqual(-10, minNeg);
 
 // max()
 maxVal = max(15, 23);
-print("Test: maxVal = 23");
 assertEqual(23, maxVal);
 
 maxNeg = max(-5, -10);
-print("Test: maxNeg = -5");
 assertEqual(-5, maxNeg);
 
 // random() - just test it runs (no assertion, value is random)
@@ -540,7 +486,6 @@ print("random(100): ", rand1, " (should be 0-99)");
 
 // Nested built-in calls
 nestedBuiltin = abs(min(-10, -5));
-print("Test: nestedBuiltin = 10");
 assertEqual(10, nestedBuiltin);
 
 /* =============================================================================
@@ -557,9 +502,7 @@ func testLocal() {
 }
 
 resultLocal = testLocal();
-print("Test: resultLocal = 42");
 assertEqual(42, resultLocal);
-print("Test: globalX = 100");
 assertEqual(100, globalX);
 
 // Parameters are local
@@ -570,9 +513,7 @@ func testParam(globalA) {
 }
 
 resultParam = testParam(5);
-print("Test: resultParam = 10");
 assertEqual(10, resultParam);
-print("Test: globalA = 999");
 assertEqual(999, globalA);
 
 // Multiple local variables
@@ -583,7 +524,6 @@ func multiLocal(a, b) {
 }
 
 multiResult = multiLocal(4, 5);
-print("Test: multiResult = 23");
 assertEqual(23, multiResult);
 
 /* =============================================================================
@@ -598,12 +538,10 @@ print("------------------");
 // Macro in expression
 radius = 5;
 area = PI * radius * radius;
-print("Test: area ~= 78.53975 (float)");
 assertFloatEqual(78.53975, area);
 
 // Macro in condition
 testMacro = (MAX_SIZE > 500);
-print("Test: testMacro = 1");
 assertEqual(1, testMacro);
 
 /* =============================================================================
@@ -635,7 +573,6 @@ print("Large number: ", largeNum);
 
 // Deep recursion (not too deep to avoid stack overflow)
 deepFact = factorial(10);
-print("Test: deepFact = 3628800");
 assertEqual(3628800, deepFact);
 
 // Many parameters
@@ -644,17 +581,14 @@ func sixParams(a, b, c, d, e, f) {
 }
 
 sixSum = sixParams(1, 2, 3, 4, 5, 6);
-print("Test: sixSum = 21");
 assertEqual(21, sixSum);
 
 // Complex expression
 complex = ((10 + 5) * 3 - 7) / 2 + 4;
-print("Test: complex = 23");
 assertEqual(23, complex);
 
 // Deep nesting of operators
 deepNest = 1 + 2 * 3 + 4 * 5 - 6 / 2;
-print("Test: deepNest = 24");
 assertEqual(24, deepNest);
 
 /* =============================================================================
@@ -665,33 +599,26 @@ print("------------------------------");
 
 // Constant folding
 constFold1 = 10 + 5;
-print("Test: constFold1 = 15");
 assertEqual(15, constFold1);
 
 constFold2 = 20 * 3;
-print("Test: constFold2 = 60");
 assertEqual(60, constFold2);
 
 // Identity optimization
 identX = 42;
 identAdd = identX + 0;
-print("Test: identAdd = 42");
 assertEqual(42, identAdd);
 
 identMul = identX * 1;
-print("Test: identMul = 42");
 assertEqual(42, identMul);
 
 identSub = identX - 0;
-print("Test: identSub = 42");
 assertEqual(42, identSub);
 
 identDiv = identX / 1;
-print("Test: identDiv = 42");
 assertEqual(42, identDiv);
 
 identZero = identX * 0;
-print("Test: identZero = 0");
 assertEqual(0, identZero);
 
 // Works well till here
@@ -713,7 +640,6 @@ func gcd(a, b) {
 }
 
 gcdResult = gcd(48, 18);
-print("Test: gcdResult = 6");
 assertEqual(6, gcdResult);
 
 // Prime checker
@@ -735,11 +661,9 @@ func isPrime(n) {
 }
 
 prime17 = isPrime(17);
-print("Test: prime17 = 1");
 assertEqual(1, prime17);
 
 prime18 = isPrime(18);
-print("Test: prime18 = 0");
 assertEqual(0, prime18);
 
 // Power function
@@ -757,11 +681,9 @@ func power(base, exp) {
 }
 
 pow2_10 = power(2, 10);
-print("Test: pow2_10 = 1024");
 assertEqual(1024, pow2_10);
 
 pow3_4 = power(3, 4);
-print("Test: pow3_4 = 81");
 assertEqual(81, pow3_4);
 
 /* =============================================================================
@@ -790,36 +712,30 @@ func squareFloat.f(num.f) {
 
 // Test INT function with INT param
 sqInt = squareInt(5);
-print("Test: sqInt = 25");
 assertEqual(25, sqInt);
 
 // Test FLOAT function with FLOAT param
 sqFloat.f = squareFloat(2.5);
-print("Test: sqFloat ~= 6.25 (float)");
 assertFloatEqual(6.25, sqFloat);
 
 // Automatic parameter type conversion: FLOAT -> INT
 floatParam.f = 3.7;
 sqConverted = squareInt(floatParam);
-print("Test: sqConverted = 16");
-assertEqual(16, sqConverted);
+assertEqual(9, sqConverted);
 
 // Automatic parameter type conversion: INT -> FLOAT
 intParam = 4;
 sqFloatConverted.f = squareFloat(intParam);
-print("Test: sqFloatConverted ~= 16.0 (float)");
 assertFloatEqual(16.0, sqFloatConverted);
 
 // Automatic assignment type conversion: INT -> FLOAT
 assignInt = 42;
 assignFloat.f = assignInt;
-print("Test: assignFloat ~= 42.0 (float)");
 assertFloatEqual(42.0, assignFloat);
 
 // Automatic assignment type conversion: FLOAT -> INT
 assignFloatVal.f = 9.8;
 assignIntVal = assignFloatVal;
-print("Test: assignIntVal = 9");
 assertEqual(9, assignIntVal);
 
 // Automatic assignment type conversion: function return
@@ -833,12 +749,10 @@ func returnFloat.f() {
 
 // INT function result to FLOAT variable
 floatFromInt.f = returnInt();
-print("Test: floatFromInt ~= 100.0 (float)");
 assertFloatEqual(100.0, floatFromInt);
 
 // FLOAT function result to INT variable
 intFromFloat = returnFloat();
-print("Test: intFromFloat = 2");
 assertEqual(2, intFromFloat);
 
 // Automatic return type conversion
@@ -851,11 +765,9 @@ func returnFloatButGiveInt.f() {
 }
 
 piAsInt = returnIntButGiveFloat();
-print("Test: piAsInt = 3");
 assertEqual(3, piAsInt);
 
 intAsFloat.f = returnFloatButGiveInt();
-print("Test: intAsFloat ~= 42.0 (float)");
 assertFloatEqual(42.0, intAsFloat);
 
 // Complex type conversion chain
@@ -866,7 +778,6 @@ func complexChain.f(a.f, b) {
 }
 
 chainResult.f = complexChain(5.8, 3);
-print("Test: chainResult ~= 8.0 (float)");
 assertFloatEqual(8.0, chainResult);
 
 // Nested calls with type conversion
@@ -880,8 +791,11 @@ func multiplyFloats.f(x.f, y.f) {
 
 // Pass float function result to int function
 nestedConv = addInts(multiplyFloats(2.5, 2.0), 10);
-print("Test: nestedConv = 15");
 assertEqual(15, nestedConv);
+
+// String type suffix
+namedValue.s = "TestString";
+assertStringEqual("TestString", namedValue);
 
 /* =============================================================================
    SECTION 19: TERNARY OPERATOR
@@ -891,37 +805,30 @@ print("----------------------------");
 
 // Basic ternary operator
 ternary1 = (5 > 3) ? 100 : 200;
-print("Test: ternary1 = 100");
 assertEqual(100, ternary1);
 
 ternary2 = (2 > 7) ? 100 : 200;
-print("Test: ternary2 = 200");
 assertEqual(200, ternary2);
 
 // Ternary with variables
 ternX = 15;
 ternY = 20;
 ternMax = (ternX > ternY) ? ternX : ternY;
-print("Test: ternMax = 20");
 assertEqual(20, ternMax);
 
 ternMin = (ternX < ternY) ? ternX : ternY;
-print("Test: ternMin = 15");
 assertEqual(15, ternMin);
 
 // Nested ternary
 nestedTern = (10 > 5) ? ((3 > 1) ? 111 : 222) : 333;
-print("Test: nestedTern = 111");
 assertEqual(111, nestedTern);
 
 // Ternary in expression
 ternExpr = 50 + ((7 > 4) ? 10 : 20);
-print("Test: ternExpr = 60");
 assertEqual(60, ternExpr);
 
 // Ternary with zero/equality
 ternZero = (0 == 0) ? 999 : 888;
-print("Test: ternZero = 999");
 assertEqual(999, ternZero);
 
 // Ternary MAX macro
@@ -929,20 +836,16 @@ assertEqual(999, ternZero);
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 macroMax1 = MAX(42, 17);
-print("Test: macroMax1 = 42");
 assertEqual(42, macroMax1);
 
 macroMax2 = MAX(-5, -10);
-print("Test: macroMax2 = -5");
 assertEqual(-5, macroMax2);
 
 macroMin1 = MIN(42, 17);
-print("Test: macroMin1 = 17");
 assertEqual(17, macroMin1);
 
 // Float ternary
 floatTern1.f = (3.7 > 2.1) ? 5.5 : 8.8;
-print("Test: floatTern1 ~= 5.5 (float)");
 assertFloatEqual(5.5, floatTern1);
 
 // Ternary in function call
@@ -951,12 +854,10 @@ func useResult(val) {
 }
 
 ternFunc = useResult((8 > 3) ? 10 : 5);
-print("Test: ternFunc = 20");
 assertEqual(20, ternFunc);
 
 // Complex ternary expression - THE CRITICAL BUG FIX TEST!
 complexCond = (10 + 5 > 12) ? (3 * 4) : (5 + 1);
-print("Test: complexCond = 12");
 assertEqual(12, complexCond);
 
 /* =============================================================================
@@ -967,40 +868,32 @@ print("--------------------------------");
 
 // Basic NOT
 notTrue = !(5 > 10);
-print("Test: notTrue = 1");
 assertEqual(1, notTrue);
 
 notFalse = !(10 > 5);
-print("Test: notFalse = 0");
 assertEqual(0, notFalse);
 
 // NOT with zero
 notZero = !(0);
-print("Test: notZero = 1");
 assertEqual(1, notZero);
 
 notNonZero = !(42);
-print("Test: notNonZero = 0");
 assertEqual(0, notNonZero);
 
 // NOT with equality
 notEqual = !(5 == 5);
-print("Test: notEqual = 0");
 assertEqual(0, notEqual);
 
 // Double NOT
 doubleNot = !!(10);
-print("Test: doubleNot = 1");
 assertEqual(1, doubleNot);
 
 // NOT in complex expression
 testNotComplex = (!(3 > 5) && (7 > 4));
-print("Test: testNotComplex = 1");
 assertEqual(1, testNotComplex);
 
 // NOT with inequality
 testNotIneq = !(10 != 10);
-print("Test: testNotIneq = 1");
 assertEqual(1, testNotIneq);
 
 /* =============================================================================

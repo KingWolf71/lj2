@@ -6,10 +6,11 @@
 #pragma "console" "on"
 #pragma "appname" "Mandelbrot Demo"
 #pragma "consolesize"  "760x690"
-#pragma "optimizecode" "off"
+#pragma "optimizecode" "on"
 #pragma "ListASM" "on"
 #pragma "version"
-	
+#pragma FastPrint on
+#pragma RunThreaded on
 	
 	left_edge   = -420;
     right_edge  =  300;

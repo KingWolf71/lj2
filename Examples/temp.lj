@@ -1,0 +1,148 @@
+﻿/* =============================================================================
+   LJ2 Comprehensive Feature Test Suite
+   Tests ALL compiler features systematically
+   ============================================================================= */
+
+#pragma appname "LJ2-Comprehensive-Test"
+#pragma console on
+#pragma optimizecode on
+#pragma ListASM on
+#pragma version
+#pragma floattolerance 0.00001
+#pragma FastPrint on
+#pragma RunThreaded on
+
+print("LJ2 COMPREHENSIVE FEATURE TEST SUITE");
+print("-------------------------------------");
+
+/* =============================================================================
+   SECTION 19: TERNARY OPERATOR
+   ============================================================================= */
+print("SECTION 19: Ternary Operator");
+print("----------------------------");
+
+// Basic ternary operator
+ternary1 = (5 > 3) ? 100 : 200;
+print("Test: ternary1 = 100");
+assertEqual(100, ternary1);
+
+ternary2 = (2 > 7) ? 100 : 200;
+print("Test: ternary2 = 200");
+assertEqual(200, ternary2);
+
+// Ternary with variables
+ternX = 15;
+ternY = 20;
+ternMax = (ternX > ternY) ? ternX : ternY;
+print("Test: ternMax = 20");
+assertEqual(20, ternMax);
+
+ternMin = (ternX < ternY) ? ternX : ternY;
+print("Test: ternMin = 15");
+assertEqual(15, ternMin);
+
+// Nested ternary
+nestedTern = (10 > 5) ? ((3 > 1) ? 111 : 222) : 333;
+print("Test: nestedTern = 111");
+assertEqual(111, nestedTern);
+
+// Ternary in expression
+ternExpr = 50 + ((7 > 4) ? 10 : 20);
+print("Test: ternExpr = 60");
+assertEqual(60, ternExpr);
+
+// Ternary with zero/equality
+ternZero = (0 == 0) ? 999 : 888;
+print("Test: ternZero = 999");
+assertEqual(999, ternZero);
+
+// Ternary MAX macro
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+
+macroMax1 = MAX(42, 17);
+print("Test: macroMax1 = 42");
+assertEqual(42, macroMax1);
+
+macroMax2 = MAX(-5, -10);
+print("Test: macroMax2 = -5");
+assertEqual(-5, macroMax2);
+
+macroMin1 = MIN(42, 17);
+print("Test: macroMin1 = 17");
+assertEqual(17, macroMin1);
+
+// Float ternary
+floatTern1.f = (3.7 > 2.1) ? 5.5 : 8.8;
+print("Test: floatTern1 ~= 5.5 (float)");
+assertFloatEqual(5.5, floatTern1);
+
+// Ternary in function call
+func useResult(val) {
+    return val * 2;
+}
+
+ternFunc = useResult((8 > 3) ? 10 : 5);
+print("Test: ternFunc = 20");
+assertEqual(20, ternFunc);
+
+// Complex ternary expression - THE CRITICAL BUG FIX TEST!
+complexCond = (10 + 5 > 12) ? (3 * 4) : (5 + 1);
+print("Test: complexCond = 12");
+assertEqual(12, complexCond);
+
+/* =============================================================================
+   SECTION 20: LOGICAL NOT OPERATOR
+   ============================================================================= */
+print("SECTION 20: Logical NOT Operator");
+print("--------------------------------");
+
+// Basic NOT
+notTrue = !(5 > 10);
+print("Test: notTrue = 1");
+assertEqual(1, notTrue);
+
+notFalse = !(10 > 5);
+print("Test: notFalse = 0");
+assertEqual(0, notFalse);
+
+// NOT with zero
+notZero = !(0);
+print("Test: notZero = 1");
+assertEqual(1, notZero);
+
+notNonZero = !(42);
+print("Test: notNonZero = 0");
+assertEqual(0, notNonZero);
+
+// NOT with equality
+notEqual = !(5 == 5);
+print("Test: notEqual = 0");
+assertEqual(0, notEqual);
+
+// Double NOT
+doubleNot = !!(10);
+print("Test: doubleNot = 1");
+assertEqual(1, doubleNot);
+
+// NOT in complex expression
+testNotComplex = (!(3 > 5) && (7 > 4));
+print("Test: testNotComplex = 1");
+assertEqual(1, testNotComplex);
+
+// NOT with inequality
+testNotIneq = !(10 != 10);
+print("Test: testNotIneq = 1");
+assertEqual(1, testNotIneq);
+
+/* =============================================================================
+   FINAL SUMMARY
+   ============================================================================= */
+print("");
+print("========================================");
+print("  COMPREHENSIVE TEST SUITE COMPLETE");
+print("========================================");
+print("");
+print("Note: Built-in assertions automatically report failures.");
+print("If you see this message, all tests passed!");
+print("");

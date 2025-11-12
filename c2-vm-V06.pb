@@ -44,26 +44,38 @@ Module C2VM
       time.i
    EndStructure
 
+   Structure stVT
+      ss.s
+      i.i
+      f.d
+   EndStructure
+
    Structure stStack
       sp.l
       pc.l
-      Array LocalVars.stVT(0)  ; Dynamic array for function's local variables (params + locals)
+      Array LocalInt.i(0)      ; Dynamic array for function's local integer variables (params + locals)
+      Array LocalFloat.d(0)    ; Dynamic array for function's local float variables (params + locals)
+      Array LocalString.s(0)   ; Dynamic array for function's local string variables (params + locals)
    EndStructure
 
    ;- Globals
-   Global            sp = 0           ; stack pointer
-   Global            pc = 0           ; Process stack
-   Global            cy = 0
-   Global            cs = 0
+   Global            sp                   = 0           ; stack pointer
+   Global            pc                   = 0           ; Process stack
+   Global            cy                   = 0
+   Global            cs                   = 0
+   Global            gFastPrint.b         = #False
+   Global            gRunThreaded.b       = #True
    Global            gExitApplication
    Global            cline.s
-   Global            gDecs = 3
-   Global            gFunctionDepth = 0       ; Fast function depth counter (avoids ListSize)
+   Global            gDecs                = 3
+   Global            gFloatTolerance.d    = 0.00001
+   Global            gFunctionDepth       = 0       ; Fast function depth counter (avoids ListSize)
 
    ; gBatchOutput declared in DeclareModule, initialized here
    gBatchOutput = ""
 
    Global Dim        *ptrJumpTable(1)
+   Global Dim        gVar.stVT(#C2MAXCONSTANTS)
    Global NewList    llStack.stStack()
    
    ;- Macros
@@ -90,21 +102,20 @@ Module C2VM
    EndMacro
    Macro             vm_FloatComparators( operator )
       sp - 1
-      If gVar(sp-1)\f operator gVar(sp)\f
-         gVar(sp-1)\i = 1
+      If gVar(sp - 1)\f operator gVar( sp )\f
+         gVar(sp - 1)\i = 1
       Else
-         gVar(sp-1)\i = 0
+         gVar(sp - 1)\i = 0
       EndIf
       pc + 1
    EndMacro
    Macro             vm_FloatOperation( operand )
       sp - 1
-      gVar(sp-1)\f = gVar(sp-1)\f operand gVar(sp)\f
+      gVar(sp - 1)\f = gVar(sp - 1)\f operand gVar( sp )\f
       pc + 1
    EndMacro
   
-   
-   XIncludeFile      "c2-vm-commands-v03.pb"
+   XIncludeFile      "c2-vm-commands-v04.pb"
 
    ;- Console GUI
    Procedure         MainWindow(name.s)
@@ -162,6 +173,8 @@ Module C2VM
       *ptrJumpTable( #ljLSTOREF )         = @C2LSTOREF()
       *ptrJumpTable( #ljJMP )             = @C2JMP()
       *ptrJumpTable( #ljJZ )              = @C2JZ()
+      *ptrJumpTable( #ljTENIF )           = @C2TENIF()
+      *ptrJumpTable( #ljTENELSE )         = @C2TENELSE()
       *ptrJumpTable( #ljADD )             = @C2ADD()
       *ptrJumpTable( #ljSUBTRACT )        = @C2SUBTRACT()
       *ptrJumpTable( #ljGREATER )         = @C2GREATER()
@@ -199,11 +212,13 @@ Module C2VM
       *ptrJumpTable( #ljSTRADD )          = @C2ADDSTR()
       *ptrJumpTable( #ljFTOS )            = @C2FTOS()
       *ptrJumpTable( #ljITOS )            = @C2ITOS()
+      *ptrJumpTable( #ljITOF )            = @C2ITOF()
+      *ptrJumpTable( #ljFTOI )            = @C2FTOI()
 
       *ptrJumpTable( #ljCall )            = @C2CALL()
-      *ptrJumpTable( #ljReturn )          = @C2Return()
-      *ptrJumpTable( #ljReturnF )         = @C2ReturnF()
-      *ptrJumpTable( #ljReturnS )         = @C2ReturnS()
+      *ptrJumpTable( #ljreturn )          = @C2Return()
+      *ptrJumpTable( #ljreturnF )         = @C2ReturnF()
+      *ptrJumpTable( #ljreturnS )         = @C2ReturnS()
       *ptrJumpTable( #ljPOP )             = @C2POP()
       *ptrJumpTable( #ljPOPS )            = @C2POPS()
       *ptrJumpTable( #ljPOPF )            = @C2POPF()
@@ -215,26 +230,38 @@ Module C2VM
       *ptrJumpTable( #ljBUILTIN_ABS )     = @C2BUILTIN_ABS()
       *ptrJumpTable( #ljBUILTIN_MIN )     = @C2BUILTIN_MIN()
       *ptrJumpTable( #ljBUILTIN_MAX )     = @C2BUILTIN_MAX()
+      *ptrJumpTable( #ljBUILTIN_ASSERT_EQUAL )  = @C2BUILTIN_ASSERT_EQUAL()
+      *ptrJumpTable( #ljBUILTIN_ASSERT_FLOAT )  = @C2BUILTIN_ASSERT_FLOAT()
+      *ptrJumpTable( #ljBUILTIN_ASSERT_STRING ) = @C2BUILTIN_ASSERT_STRING()
 
       *ptrJumpTable( #ljNOOP )            = @C2NOOP()
+      *ptrJumpTable( #ljNOOPIF )          = @C2NOOP()
       *ptrJumpTable( #ljHALT )            = @C2HALT()
 
    EndProcedure
-   
+
+   Procedure            vmTransferMetaToRuntime()
+      ; Transfer gVarMeta (compile-time) to gVar (runtime)
+      ; This allows compiler and VM to be separate in the future
+      ; In the future, this will read from JSON/XML instead of gVarMeta
+      Protected i
+
+      For i = 0 To gnLastVariable - 1
+         gVar(i)\i = gVarMeta(i)\valueInt
+         gVar(i)\f = gVarMeta(i)\valueFloat
+         gVar(i)\ss = gVarMeta(i)\valueString
+      Next
+   EndProcedure
+
    Procedure            vmClearRun()
       Protected         i
 
       ; Clear runtime values but preserve compilation metadata
       ; IMPORTANT: Don't clear flags or paramOffset - they're set during compilation!
       For i = 0 To #C2MAXCONSTANTS
-         ; Only clear runtime data values, not metadata
-         ; Keep: name, flags, paramOffset (set during compilation)
-         ; Clear: runtime values (i, f, ss, p)
-         gVar(i)\ss = ""
-         gVar(i)\p = 0
-         gVar(i)\i = 0
-         gVar(i)\f = 0.0
-         ; Do NOT clear: gVar(i)\name, gVar(i)\flags, gVar(i)\paramOffset
+         gVar( i )\f = 0
+         gVar( i )\ss = ""
+         gVar( i )\i = 0
       Next
 
       ; Clear the call stack
@@ -258,6 +285,10 @@ Module C2VM
       Protected      opcode.w        ; Cached opcode (VM optimization)
       Protected      *opcodeHandler  ; Cached handler pointer (VM optimization)
       Dim            arProfiler.stProfiler(1)
+
+      ; Transfer compile-time metadata to runtime values
+      ; In the future, this will load from JSON/XML instead of gVarMeta
+      vmTransferMetaToRuntime()
 
       t     = ElapsedMilliseconds()
       sp    = gnLastVariable
@@ -340,9 +371,28 @@ Module C2VM
       cs = ArraySize( ArCode() )      
    
       ;Execute #pragmas first
+      temp  = mapPragmas("runthreaded")
+      If temp = "off" Or temp = "0" Or temp = "false"
+         gRunThreaded = #False
+      Else
+         gRunThreaded = #True
+      EndIf
+      
+      temp  = mapPragmas("fastprint")
+      If temp = "on" Or temp = "1" Or temp = "true"
+         gFastPrint = #True
+      Else
+         gFastPrint = #False
+      EndIf
+      
       temp  = mapPragmas("decimals")
       If temp <> ""
          gDecs = Val( temp )
+      EndIf
+
+      If mapPragmas("floattolerance")
+         temp = mapPragmas("floattolerance")
+         gFloatTolerance = ValD(temp)
       EndIf
 
       name  = mapPragmas("appname")
@@ -354,7 +404,7 @@ Module C2VM
          vmExecute()
       CompilerElse
          ; GUI mode
-         If temp = "on"
+         If temp = "on" Or temp = "1" Or temp = "true"
             win = MainWindow( name )
             temp = mapPragmas("consolesize")
             x = Val( StringField(temp, 1, "x") )
@@ -365,8 +415,12 @@ Module C2VM
          cs = ArraySize( ArCode() )
 
          If win
-            thRun = CreateThread(@vmExecute(), 0 )
-
+            If gRunThreaded = #True
+               thRun = CreateThread(@vmExecute(), 0 )
+            Else
+               vmExecute()
+            EndIf
+            
             Repeat
                If IsWindow(#MainWindow)
                   Event = WaitWindowEvent(32)
@@ -390,7 +444,7 @@ Module C2VM
                            ; Always clear VM state before loading new file
                            vmClearRun()
 
-                           If IsThread( thRun )
+                           If gRunThreaded = #True And IsThread( thRun )
                               KillThread( thRun)
                            EndIf
 
@@ -410,7 +464,7 @@ Module C2VM
                         EndIf
                   EndSelect
                Else
-                  Delay( 64)
+                  Delay(64)
                EndIf
             Until gExitApplication
 
@@ -429,9 +483,9 @@ Module C2VM
 EndModule
 
 ; IDE Options = PureBasic 6.21 (Windows - x64)
-; CursorPosition = 70
-; FirstLine = 62
-; Folding = ---
+; CursorPosition = 466
+; FirstLine = 433
+; Folding = ----
 ; Markers = 14
 ; EnableAsm
 ; EnableThread

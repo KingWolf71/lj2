@@ -26,12 +26,12 @@ func square(n) {
 // Test 2: Float functions
 //--------------------------------------
 
-func circleArea(radius.f) {
+func circleArea.f(radius.f) {
     pi.f = 3.14159265359;
     return pi * radius * radius;
 }
 
-func celsiusToFahrenheit(c.f) {
+func celsiusToFahrenheit.f(c.f) {
     return c * 9.0 / 5.0 + 32.0;
 }
 
@@ -39,11 +39,11 @@ func celsiusToFahrenheit(c.f) {
 // Test 3: String functions
 //--------------------------------------
 
-func greet(name.s) {
+func greet.s(name.s) {
     return "Hello, " + name + "!";
 }
 
-func makeTitle(word.s) {
+func makeTitle.s(word.s) {
     return "*** " + word + " ***";
 }
 
@@ -51,11 +51,11 @@ func makeTitle(word.s) {
 // Test 4: Mixed parameter types
 //--------------------------------------
 
-func formatPrice(item.s, price.f) {
+func formatPrice.s(item.s, price.f) {
     return item + ": $" + price;
 }
 
-func describe(name.s, age, height.f) {
+func describe.s(name.s, age, height.f) {
     return name.s + " is " + age + " years old and " + height + "m tall";
 }
 
@@ -63,13 +63,13 @@ func describe(name.s, age, height.f) {
 // Test 5: Functions calling functions
 //--------------------------------------
 
-func pythagorean(a.f, b.f) {
+func pythagorean.f(a.f, b.f) {
     aSquared.f = square(a);
     bSquared.f = square(b);
     return aSquared + bSquared;
 }
 
-func volumeOfCylinder(radius.f, height.f) {
+func volumeOfCylinder.f(radius.f, height.f) {
     baseArea.f = circleArea(radius);
     return baseArea * height;
 }
@@ -96,76 +96,98 @@ func fibonacci(n) {
 // Test 7: No parameters
 //--------------------------------------
 
-func getPi() {
+func getPi.f() {
     return 3.14159265359;
 }
 
-func getGreeting() {
+func getGreeting.s() {
     return "Welcome to LJ2!";
 }
 
 //--------------------------------------
 // MAIN PROGRAM - Run all tests
 //--------------------------------------
-
-print("\n=== Test 1: Integer Functions ===\n");
+print("");
+print("=== Test 1: Integer Functions ===");
+print("");
 result = add(5, 3);
-print("add(5, 3) = ", result, "\n");
+print("add(5, 3) = ", result);
 
 result = multiply(7, 6);
-print("multiply(7, 6) = ", result, "\n");
+print("multiply(7, 6) = ", result);
 
 result = square(9);
-print("square(9) = ", result, "\n");
+print("square(9) = ", result);
 
-print("\n=== Test 2: Float Functions ===\n");
+print("");
+print("=== Test 2: Float Functions ===");
+print("");
+
 area.f = circleArea(5.0);
-print("circleArea(5.0) = ", area, "\n");
+print("circleArea(5.0) = ", area);
 
 temp.f = celsiusToFahrenheit(25.0);
-print("celsiusToFahrenheit(25.0) = ", temp, "\n");
+print("celsiusToFahrenheit(25.0) = ", temp);
 
-print("\n=== Test 3: String Functions ===\n");
+print("");
+print("=== Test 3: String Functions ===");
+print("");
 greeting.s = greet("Alice");
-print(greeting, "\n");
+print(greeting);
 
 title.s = makeTitle("FUNCTIONS WORK");
-print(title, "\n");
+print(title);
 
-print("\n=== Test 4: Mixed Types ===\n");
+print("");
+print("=== Test 4: Mixed Types ===");
+print("");
+
 price.s = formatPrice("Coffee", 3.50);
-print(price, "\n");
+print("Coffee price=",price);
 
 info.s = describe("Bob", 25, 1.75);
-print(info, "\n");
+print(info);
 
-print("\n=== Test 5: Nested Calls ===\n");
+print("");
+print("=== Test 5: Nested Calls ===");
+print("");
+
 hypotenuse.f = pythagorean(3.0, 4.0);
-print("pythagorean(3, 4) = ", hypotenuse, " (should be 25)\n");
+print("pythagorean(3, 4) = ", hypotenuse, " (should be 25)");
 
 volume.f = volumeOfCylinder(2.0, 5.0);
-print("cylinder volume(r=2, h=5) = ", volume, "\n");
+print("cylinder volume(r=2, h=5) = ", volume);
 
-print("\n=== Test 6: Recursion ===\n");
+print("");
+print("=== Test 6: Recursion ===");
+print("");
 fact5 = factorial(5);
-print("factorial(5) = ", fact5, " (should be 120)\n");
+print("factorial(5) = ", fact5, " (should be 120)");
 
 fib7 = fibonacci(7);
-print("fibonacci(7) = ", fib7, " (should be 13)\n");
+print("fibonacci(7) = ", fib7, " (should be 13)");
 
-print("\n=== Test 7: No Parameters ===\n");
-pi.f = getPi();
-print("getPi() = ", pi, "\n");
+print("");
+print("=== Test 7: No Parameters ===");
+print("");
+rpi.f = getPi();
+print("getPi() = ", rpi);
 
 msg.s = getGreeting();
-print(msg, "\n");
+print(msg);
 
-print("\n=== Test 8: Deeply Nested ===\n");
+print("");
+print("=== Test 8: Deeply Nested ===");
+print("");
+
 deep = add(multiply(square(2), 3), square(add(1, 2)));
-print("add(multiply(square(2), 3), square(add(1, 2))) = ", deep, "\n");
-print("Breakdown: square(2)=4, 4*3=12, add(1,2)=3, square(3)=9, 12+9=21\n");
+print("add(multiply(square(2), 3), square(add(1, 2))) = ", deep);
+print("Breakdown: square(2)=4, 4*3=12, add(1,2)=3, square(3)=9, 12+9=21");
 
-print("\n=== Test 9: Multiple Returns ===\n");
+print("");
+print("=== Test 9: Multiple Returns ===");
+print("");
+
 func maxOfThree(a, b, c) {
     if (a >= b && a >= c) {
         return a;
@@ -177,6 +199,7 @@ func maxOfThree(a, b, c) {
 }
 
 max = maxOfThree(15, 27, 12);
-print("maxOfThree(15, 27, 12) = ", max, " (should be 27)\n");
+print("maxOfThree(15, 27, 12) = ", max, " (should be 27)");
 
-print("\n=== All Tests Complete! ===\n");
+print("");
+print("=== All Tests Complete! ===");

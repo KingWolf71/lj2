@@ -8,5 +8,3 @@
 8. Compiler flow pre-processor - scanner - AST - codegenerator - postprocessor
 9. Postprocessor is crucial to properly correct JMP and CALL calls
 10. Postprocessor is crucial and final step to make sure type "guessing" is not needed in the VirtualMachine
-11. don't try to compile yourself
-12. use powershell commands

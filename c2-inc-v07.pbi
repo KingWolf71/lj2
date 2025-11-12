@@ -59,6 +59,8 @@ Enumeration
    #ljSTRADD
    #ljFTOS         ; Float To String conversion
    #ljITOS         ; Integer To String conversion
+   #ljITOF         ; Integer To Float conversion
+   #ljFTOI         ; Float To Integer conversion
 
    #ljOr
    #ljAND
@@ -116,6 +118,9 @@ Enumeration
    #ljTERNARY
    #ljQUESTION
    #ljCOLON
+   #ljTENIF        ; Ternary IF: Jump if condition false
+   #ljTENELSE      ; Ternary ELSE: Jump past false branch
+   #ljNOOPIF       ; Marker for ternary fix() positions (removed after FixJMP)
 
    #ljMOVS
    #ljMOVF
@@ -140,6 +145,9 @@ Enumeration
    #ljBUILTIN_ABS         ; abs(x) - absolute value
    #ljBUILTIN_MIN         ; min(a, b) - minimum of two values
    #ljBUILTIN_MAX         ; max(a, b) - maximum of two values
+   #ljBUILTIN_ASSERT_EQUAL      ; assertEqual(expected, actual) - assert integers are equal
+   #ljBUILTIN_ASSERT_FLOAT      ; assertFloatEqual(expected, actual, tolerance) - assert floats are equal within tolerance
+   #ljBUILTIN_ASSERT_STRING     ; assertStringEqual(expected, actual) - assert strings are equal
 
    #ljEOF
 EndEnumeration
@@ -147,8 +155,6 @@ EndEnumeration
 ; Calculate total token count at compile time
 #C2TOKENCOUNT = #ljEOF + 1
 
-;- Built-in Functions
-XIncludeFile "c2-builtins.pbi"
 
 ;- Error Codes
 Enumeration C2ErrorCodes
@@ -168,9 +174,10 @@ Enumeration C2ErrorCodes
    #C2ERR_EXPECTED_STATEMENT = 12
    #C2ERR_STACK_OVERFLOW = 14
    #C2ERR_FUNCTION_REDECLARED = 15
+   #C2ERR_UNDEFINED_FUNCTION = 16
 
-   #C2ERR_MEMORY_ALLOCATION = 16
-   #C2ERR_CODEGEN_FAILED = 17
+   #C2ERR_MEMORY_ALLOCATION = 17
+   #C2ERR_CODEGEN_FAILED = 18
 EndEnumeration
 
 ;- Structures
@@ -179,16 +186,22 @@ Structure stType
    i.l
    j.l
    n.l
+   flags.b     ; Instruction flags (bit 0: in ternary expression)
 EndStructure
 
-Structure stVT  ; Variable Type
+; Instruction flags
+#INST_FLAG_TERNARY = 1
+
+; Runtime value arrays - separated by type for maximum VM performance
+Structure stVarMeta  ; Compile-time metadata and constant values
    name.s
    flags.w
-   ss.s
-   *p
-   i.i
-   f.d
-   paramOffset.i  ; For PARAM variables: offset from callerSp (0=first param, 1=second, etc)
+   paramOffset.i        ; For PARAM variables: offset from callerSp (0=first param, 1=second, etc)
+   typeSpecificIndex.i  ; For local variables: index within type-specific local array (0-based)
+   ; Constant values (set at compile time, copied to gVar at VM init)
+   valueInt.i           ; Integer constant value
+   valueFloat.d         ; Float constant value
+   valueString.s        ; String constant value
 EndStructure
 
 Structure stATR
@@ -197,10 +210,21 @@ Structure stATR
    flttoken.w
 EndStructure
 
+Structure stBuiltinDef
+   name.s          ; Function name as it appears in source code
+   opcode.i        ; Opcode for this built-in
+   minParams.i     ; Minimum parameter count
+   maxParams.i     ; Maximum parameter count (-1 = unlimited)
+   returnType.i    ; Return type: #C2FLAG_INT, #C2FLAG_FLOAT, or #C2FLAG_STR
+EndStructure
+
 ;- Globals
 
 Global Dim           gszATR.stATR(#C2TOKENCOUNT)
-Global Dim           gVar.stVT(#C2MAXCONSTANTS)
+Global Dim           gVarMeta.stVarMeta(#C2MAXCONSTANTS)  ; Compile-time info only
+;Global Dim           gVarInt.i(#C2MAXCONSTANTS)           ; Runtime integer values
+;Global Dim           gVarFloat.d(#C2MAXCONSTANTS)         ; Runtime float values
+;Global Dim           gVarString.s(#C2MAXCONSTANTS)        ; Runtime string values
 Global Dim           arCode.stType(1)
 Global NewMap        mapPragmas.s()
 
@@ -210,36 +234,36 @@ Global               gnTotalTokens.i
 ;- Macros
 Macro          _ASMLineHelper1(view, uvar)
    CompilerIf view
-      If gVar( uvar )\flags & #C2FLAG_INT
-         temp = " (" + Str( gVar( uvar )\i ) + ")" 
-      ElseIf gVar( uvar )\flags & #C2FLAG_FLOAT
-         temp = " (" + StrF( gVar( uvar )\f, 3 ) + ")" 
-      ElseIf gVar( uvar )\flags & #C2FLAG_STR
-         temp = " (" + gVar( uvar )\ss + ")" 
+      If gVarMeta( uvar )\flags & #C2FLAG_INT
+         temp = " (" + Str( gVarMeta( uvar )\valueInt ) + ")"
+      ElseIf gVarMeta( uvar )\flags & #C2FLAG_FLOAT
+         temp = " (" + StrF( gVarMeta( uvar )\valueFloat, 3 ) + ")"
+      ElseIf gVarMeta( uvar )\flags & #C2FLAG_STR
+         temp = " (" + gVarMeta( uvar )\valueString + ")"
       EndIf
    CompilerEndIf
 EndMacro
 
 Macro          _ASMLineHelper2(uvar)
-   If gVar( uvar )\flags & #C2FLAG_IDENT
-      temp = gVar( uvar )\name
-   ElseIf gVAR( uvar )\flags & #C2FLAG_STR
-      temp = gVar( uvar )\ss
-   ElseIf gVar( uvar )\flags & #C2FLAG_FLOAT
-      temp = StrD( gVar( uvar )\f )
+   If gVarMeta( uvar )\flags & #C2FLAG_IDENT
+      temp = gVarMeta( uvar )\name
+   ElseIf gVarMeta( uvar )\flags & #C2FLAG_STR
+      temp = gVarMeta( uvar )\valueString
+   ElseIf gVarMeta( uvar )\flags & #C2FLAG_FLOAT
+      temp = StrD( gVarMeta( uvar )\valueFloat )
    Else
-      temp = Str(gVar( uvar )\i )
+      temp = Str( gVarMeta( uvar )\valueInt )
    EndIf
 EndMacro
 
 Macro                   _VarExpand(vr)
    temp = ""
-   If gVar( vr )\flags & #C2FLAG_INT :   temp + " INT "   : EndIf
-   If gVar( vr )\flags & #C2FLAG_FLOAT : temp + " FLT "   : EndIf
-   If gVar( vr )\flags & #C2FLAG_STR   : temp + " STR "   : EndIf
-   If gVar( vr )\flags & #C2FLAG_CONST : temp + " CONST " : EndIf
-   If gVar( vr )\flags & #C2FLAG_PARAM : temp + " PARAM " : EndIf
-   If gVar( vr )\flags & #C2FLAG_IDENT : temp + " VAR"    : EndIf
+   If gVarMeta( vr )\flags & #C2FLAG_INT :   temp + " INT "   : EndIf
+   If gVarMeta( vr )\flags & #C2FLAG_FLOAT : temp + " FLT "   : EndIf
+   If gVarMeta( vr )\flags & #C2FLAG_STR   : temp + " STR "   : EndIf
+   If gVarMeta( vr )\flags & #C2FLAG_CONST : temp + " CONST " : EndIf
+   If gVarMeta( vr )\flags & #C2FLAG_PARAM : temp + " PARAM " : EndIf
+   If gVarMeta( vr )\flags & #C2FLAG_IDENT : temp + " VAR"    : EndIf
 EndMacro
 
 Macro          ASMLine(obj,show)
@@ -268,30 +292,30 @@ Macro          ASMLine(obj,show)
       CompilerEndIf
    ElseIf obj\code = #ljMOV
       _ASMLineHelper1( show, obj\j )
-      line + "[" + gVar( obj\j )\name + temp + "] --> [" + gVar( obj\i )\name + "]"
+      line + "[" + gVarMeta( obj\j )\name + temp + "] --> [" + gVarMeta( obj\i )\name + "]"
       flag + 1
    ElseIf obj\code = #ljSTORE
       _ASMLineHelper1( show, sp - 1 )
-      line + "[sp" + temp + "] --> [" + gVar( obj\i )\name + "]"
+      line + "[sp" + temp + "] --> [" + gVarMeta( obj\i )\name + "]"
       flag + 1
    ElseIf obj\code = #ljPUSH Or obj\code = #ljFetch Or obj\code = #ljPUSHS Or obj\code = #ljPUSHF
       flag + 1
       _ASMLineHelper1( show, obj\i )
-      If gVAR( obj\i )\flags & #C2FLAG_IDENT
-         line + "[" + gVar( obj\i )\name + "] --> [sp]"
-      ElseIf gVAR( obj\i )\flags & #C2FLAG_STR
-         line + "[" + gVar( obj\i )\ss + "] --> [sp]"
-      ElseIf gVar( obj\i )\flags & #C2FLAG_INT
-         line + "[" + Str(gVar( obj\i )\i) +  "] --> [sp]"
-      ElseIf gVar( obj\i )\flags & #C2FLAG_FLOAT
-         line + "[" + StrD(gVar( obj\i )\f,3) +  "] --> [sp]"
+      If gVarMeta( obj\i )\flags & #C2FLAG_IDENT
+         line + "[" + gVarMeta( obj\i )\name + "] --> [sp]"
+      ElseIf gVarMeta( obj\i )\flags & #C2FLAG_STR
+         line + "[" + gVarMeta( obj\i )\valueString + "] --> [sp]"
+      ElseIf gVarMeta( obj\i )\flags & #C2FLAG_INT
+         line + "[" + Str(gVarMeta( obj\i )\valueInt) +  "] --> [sp]"
+      ElseIf gVarMeta( obj\i )\flags & #C2FLAG_FLOAT
+         line + "[" + StrD(gVarMeta( obj\i )\valueFloat,3) +  "] --> [sp]"
       Else
-         line + "[" + gVar( obj\i )\name + "] --> [sp]"
+         line + "[" + gVarMeta( obj\i )\name + "] --> [sp]"
       EndIf
    ElseIf obj\code = #ljPOP Or obj\code = #ljPOPS Or obj\code = #ljPOPF
       flag + 1
       _ASMLineHelper1( show, obj\i )
-      line + "[sp] --> [" + gVar( obj\i )\name + "]"
+      line + "[sp] --> [" + gVarMeta( obj\i )\name + "]"
    ElseIf obj\code = #ljNEGATE Or obj\code = #ljNOT 
       flag + 1
       CompilerIf show
@@ -301,7 +325,7 @@ Macro          ASMLine(obj,show)
          line  + "  op (sp - 1)"
       CompilerEndIf
       
-   ElseIf obj\code <> #ljHALT And obj\code <> #ljreturn
+   ElseIf obj\code <> #ljHALT And obj\code <> #ljreturn And obj\code <> #ljreturnF And obj\code <> #ljreturnS
       CompilerIf show
          _ASMLineHelper2(sp - 2)
          line  + "   (" + temp + ") -- ("
@@ -390,6 +414,10 @@ c2tokens:
    Data.s   "FTOS"
    Data.i   0, 0
    Data.s   "ITOS"
+   Data.i   0, 0
+   Data.s   "ITOF"
+   Data.i   0, 0
+   Data.s   "FTOI"
    Data.i   0, 0
 
    Data.s   "OR"
@@ -499,6 +527,12 @@ c2tokens:
    Data.i   0, 0
    Data.s   "COLON"
    Data.i   0, 0
+   Data.s   "TENIF"
+   Data.i   0, 0
+   Data.s   "TENELSE"
+   Data.i   0, 0
+   Data.s   "NOOPIF"
+   Data.i   0, 0
 
    Data.s   "MOVS"
    Data.i   0, 0
@@ -542,6 +576,12 @@ c2tokens:
    Data.i   0, 0
    Data.s   "MAX"
    Data.i   0, 0
+   Data.s   "ASSERT_EQ"
+   Data.i   0, 0
+   Data.s   "ASSERT_FLT"
+   Data.i   0, 0
+   Data.s   "ASSERT_STR"
+   Data.i   0, 0
 
    Data.s   "EOF"
    Data.i   0, 0
@@ -549,8 +589,8 @@ c2tokens:
 EndDataSection
 
 ; IDE Options = PureBasic 6.21 (Windows - x64)
-; CursorPosition = 180
-; FirstLine = 166
+; CursorPosition = 222
+; FirstLine = 207
 ; Folding = --
 ; Optimizer
 ; EnableAsm

@@ -1,3 +1,8 @@
+#pragma appname "Simple While"
+#pragma "console" "on"
+#pragma "ListASM" "on"
+#pragma "version"
+
 count = 1;
  while (count < 10) {
      print("count is: ", count);

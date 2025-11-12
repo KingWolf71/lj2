@@ -1,0 +1,149 @@
+/* Bug Fix Test
+   Tests: int/float/string returns, nesting, recursion
+*/
+
+#pragma appname "Bug Fix"
+#pragma "decimals" 3
+#pragma "console" "on"
+#pragma "consolesize"  "760x690"
+#pragma "optimizecode" "on"
+#pragma "ListASM" off
+#pragma "version"
+#pragma FastPrint on
+#pragma RunThreaded on
+
+#define PLNL(mytext) print(mytext); print("");
+#define PLNL2(txt1,txt2) print(txt1,txt2); print("");
+
+// Integer function
+func add(a, b) {
+    return a + b;
+}
+
+// Float function
+func divide.f(x.f, y.f) {
+    return x / y;
+}
+
+// String function
+func greet.s(name.s) {
+    return "Hi " + name;
+}
+
+// TESTS
+print("=== Integer Test ===");
+r1 = add(10, 5);
+PLNL2("add(10,5) = ", r1)
+
+print("=== Float Test ===");
+r2.f = divide.f(100.0, 4.0);
+PLNL2("divide(100,4) = ", r2)
+
+print("=== String Test ===");
+s.s = greet.s("Bob");
+PLNL(s)
+
+// Function tests
+
+func test8.f(var1.f, var2.f, var3.s)
+{
+	a.f = #pi;
+	
+	print("var1=", var1, " var2=", var2, " var3=", var3 );
+	f = (0.01 + a) / 123456.1;
+	f = f * 761.0;
+	
+	return f;
+}
+
+a.f = 17.88;
+r.f = test8( a, 77.3, " Hello" );
+print("r = ", r, " a = ", a );
+r = test8( 77.3, " Hello", a );
+print("r = ", r, " a = ", a );
+r = test8( a, "World", "day" );
+print("r = ", r, " a = ", a ); print("");
+
+// Complex expression
+complex = ((10 + 5) * 3 - 7) / 2 + 4;
+print("Complex expr: ", complex, " (expected: 23)");
+print("");
+
+func square(num) {
+    return num * num;
+}
+
+func circleArea.f(radius.f) {
+    pi.f = 3.14159265359;
+    return pi * radius * radius;
+}
+
+func volumeOfCylinder.f(radius.f, height.f) {
+    baseArea.f = circleArea(radius);
+    return baseArea * height;
+}
+
+func pythagorean.f(a.f, b.f) {
+    aSquared.f = square(a);
+    bSquared.f = square(b);
+    return aSquared + bSquared;
+}
+
+
+volume.f = volumeOfCylinder(2.0, 5.0);
+print("cylinder volume(r=2, h=5) = ", volume );
+
+hypotenuse.f = pythagorean(3.0, 4.0);
+print("pythagorean(3, 4) = ", hypotenuse, " (should be 25)");
+
+func getPi() {
+    return 3.14159265359;
+}
+
+func getPiF.f() {
+    return 3.14159265359;
+}
+
+print("");
+
+print("pi = ", getPi() );
+rpi.f = getPiF();
+print("getPi() = ", rpi);
+print("");
+
+ternX = 15;
+ternY = 20;
+ternMin = (ternX < ternY) ? ternX : ternY;
+print("min(15, 20) via ternary: ", ternMin, " (expected: 15)");
+
+// Basic ternary operator
+ternary1 = (5 > 3) ? 100 : 200;
+print("(5 > 3) ? 100 : 200 = ", ternary1, " (expected: 100)");
+
+// Complex ternary expression
+complexCond = (10 + 5 > 12) ? (3 * 4) : (5 + 1);
+print("Complex ternary: ", complexCond, " (expected: 12)");
+print("");
+
+// String literals
+print("Test: String literal assignment, Expected: Hello, World!");
+testStr.s = "Hello, World!";
+print("Test: World!", testStr );
+assertStringEqual("Hello, World!", testStr);
+
+// Nested calls with type conversion
+func addInts(a, b) {
+    return a + b;
+}
+
+func multiplyFloats.f(x.f, y.f) {
+    return x * y;
+}
+
+// Pass float function result to int function
+nestedConv = addInts(multiplyFloats(2.5, 2.0), 10);
+print("Test: nestedConv = 15");
+assertEqual(15, nestedConv);
+
+print("");
+print("=== Done ===");

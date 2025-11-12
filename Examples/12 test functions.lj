@@ -16,12 +16,12 @@ func add(a, b) {
 }
 
 // Float function
-func divide(x.f, y.f) {
+func divide.f(x.f, y.f) {
     return x / y;
 }
 
 // String function
-func greet(name.s) {
+func greet.s(name.s) {
     return "Hi " + name.s;
 }
 

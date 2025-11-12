@@ -1,0 +1,2 @@
+1. comparators < > == != etc return an INT even if it's a float or string while using same index
+2. temp variables

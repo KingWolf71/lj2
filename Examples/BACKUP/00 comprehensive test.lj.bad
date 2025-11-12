@@ -1,0 +1,714 @@
+/* =============================================================================
+   LJ2 Comprehensive Feature Test Suite
+   Tests ALL compiler features systematically
+   ============================================================================= */
+
+#pragma appname "LJ2-Comprehensive-Test"
+#pragma console on
+#pragma optimizecode on
+#pragma ListASM on
+#pragma version
+
+print("LJ2 COMPREHENSIVE FEATURE TEST SUITE");
+print("-------------------------------------");
+
+/* =============================================================================
+   SECTION 1: DATA TYPES AND LITERALS
+   ============================================================================= */
+print("SECTION 1: Data Types and Literals");
+print("-----------------------------------");
+
+// Integer literals
+testInt = 42;
+print("Integer: ", testInt, " (expected: 42)");
+
+testNegInt = -17;
+print("Negative integer: ", testNegInt, " (expected: -17)");
+
+testZero = 0;
+print("Zero: ", testZero, " (expected: 0)");
+
+// Float literals
+testFloat = 3.14159;
+print("Float: ", testFloat, " (expected: 3.14159)");
+
+testNegFloat = -2.718;
+print("Negative float: ", testNegFloat, " (expected: -2.718)");
+
+testFloatZero = 0.0;
+print("Float zero: ", testFloatZero, " (expected: 0.0)");
+
+// String literals
+testStr = "Hello, World!";
+print("String: ", testStr, " (expected: Hello, World!)");
+
+testEmptyStr = "";
+print("Empty string: '", testEmptyStr, "' (expected: '')");
+
+/* =============================================================================
+   ADDITION: Confirmation Alerts and Failure Warnings
+   ============================================================================= */
+
+// Function to display confirmation alert
+func confirmAlert(section, message) {
+    print("[CONFIRMATION] Section ", section, ": ", message);
+}
+
+// Function to display failure warning
+func failureWarning(section, message) {
+    print("[WARNING] Section ", section, " FAILED: ", message);
+}
+
+/* =============================================================================
+   ADDITION: Test Confirmation for All Sections
+   ============================================================================= */
+
+// Function to test and confirm results
+func testAndConfirm(section, description, actual, expected) {
+    if (actual == expected) {
+        print("[PASS] Section ", section, ": ", description);
+    } else {
+        print("[FAIL] Section ", section, ": ", description, " - Expected: ", expected, ", Got: ", actual);
+    }
+}
+
+// Example usage in SECTION 1
+confirmAlert(1, "Data Types and Literals tests started.");
+
+// Integer literal tests
+testAndConfirm(1, "Integer literal", testInt, 42);
+testAndConfirm(1, "Negative integer literal", testNegInt, -17);
+testAndConfirm(1, "Zero literal", testZero, 0);
+
+// Float literal tests
+testAndConfirm(1, "Float literal", testFloat, 3.14159);
+testAndConfirm(1, "Negative float literal", testNegFloat, -2.718);
+testAndConfirm(1, "Float zero literal", testFloatZero, 0.0);
+
+// String literal tests
+testAndConfirm(1, "String literal", testStr, "Hello, World!");
+testAndConfirm(1, "Empty string literal", testEmptyStr, "");
+
+confirmAlert(1, "Data Types and Literals tests completed.");
+
+/* =============================================================================
+   SECTION 2: ARITHMETIC OPERATORS
+   ============================================================================= */
+print("SECTION 2: Arithmetic Operators");
+print("-------------------------------");
+
+a = 20;
+b = 7;
+
+// Addition
+resultAdd = a + b;
+print("20 + 7 = ", resultAdd, " (expected: 27)");
+
+// Subtraction
+resultSub = a - b;
+print("20 - 7 = ", resultSub, " (expected: 13)");
+
+// Multiplication
+resultMul = a * b;
+print("20 * 7 = ", resultMul, " (expected: 140)");
+
+// Division
+resultDiv = a / b;
+print("20 / 7 = ", resultDiv, " (expected: 2)");
+
+// Modulo
+resultMod = a % b;
+print("20 % 7 = ", resultMod, " (expected: 6)");
+
+// Negative operands
+negResult = -10 + 5;
+print("-10 + 5 = ", negResult, " (expected: -5)");
+
+// Float arithmetic
+floatA = 10.5;
+floatB = 2.5;
+floatResult = floatA * floatB;
+print("10.5 * 2.5 = ", floatResult, " (expected: 26.25)");
+
+// Mixed int/float
+mixedResult = 10 + 2.5;
+print("10 + 2.5 = ", mixedResult, " (expected: 12.5)");
+
+/* =============================================================================
+   SECTION 3: COMPARISON OPERATORS
+   ============================================================================= */
+print("SECTION 3: Comparison Operators");
+print("-------------------------------");
+
+x = 10;
+y = 20;
+z = 10;
+
+// Less than
+if (x < y) {
+    print("10 < 20: TRUE (correct)");
+}
+
+// Greater than
+if (y > x) {
+    print("20 > 10: TRUE (correct)");
+}
+
+// Less than or equal
+if (x <= z) {
+    print("10 <= 10: TRUE (correct)");
+}
+
+// Greater than or equal
+if (y >= x) {
+    print("20 >= 10: TRUE (correct)");
+}
+
+// Equality
+if (x == z) {
+    print("10 == 10: TRUE (correct)");
+}
+
+// Inequality
+if (x != y) {
+    print("10 != 20: TRUE (correct)");
+}
+
+// Float comparisons
+f1 = 3.14;
+f2 = 3.14;
+if (f1 == f2) {
+    print("3.14 == 3.14: TRUE (correct)");
+}
+
+/* =============================================================================
+   SECTION 4: LOGICAL OPERATORS
+   ============================================================================= */
+print("SECTION 4: Logical Operators");
+print("----------------------------");
+
+p = 5;
+q = 15;
+r = 25;
+
+// AND operator
+if (p < q && q < r) {
+    print("(5 < 15) && (15 < 25): TRUE (correct)");
+}
+
+// OR operator
+if (p > 100 || q < 20) {
+    print("(5 > 100) || (15 < 20): TRUE (correct)");
+}
+
+// Complex logical expression
+if ((p < q && q < r) || p == 5) {
+    print("Complex logical: TRUE (correct)");
+}
+
+// Nested conditions
+if (p < q) {
+    if (q < r) {
+        print("Nested conditions: Both TRUE (correct)");
+    }
+}
+
+/* =============================================================================
+   SECTION 5: CONTROL FLOW - IF/ELSE
+   ============================================================================= */
+print("SECTION 5: Control Flow - If/Else");
+print("----------------------------------");
+
+// Simple if
+testVal = 10;
+if (testVal == 10) {
+    print("Simple if: PASS");
+}
+
+// If-else
+if (testVal < 5) {
+    print("If-else: FAIL");
+} else {
+    print("If-else: PASS");
+}
+
+// Nested if-else
+score = 85;
+if (score >= 90) {
+    print("Grade: A");
+} else {
+    if (score >= 80) {
+        print("Grade: B (correct for 85)");
+    } else {
+        if (score >= 70) {
+            print("Grade: C");
+        } else {
+            print("Grade: F");
+        }
+    }
+}
+
+// Multiple conditions
+age = 25;
+hasLicense = 1;
+if (age >= 18 && hasLicense == 1) {
+    print("Can drive: YES (correct)");
+}
+
+/* =============================================================================
+   SECTION 6: CONTROL FLOW - WHILE LOOPS
+   ============================================================================= */
+print("SECTION 6: Control Flow - While Loops");
+print("--------------------------------------");
+
+// Simple while loop
+print("Count up 1-5: ");
+counter = 1;
+while (counter <= 5) {
+    print(counter, " ");
+    counter = counter + 1;
+}
+
+// While with condition
+print("Count down 10-7: ");
+countdown = 10;
+while (countdown >= 7) {
+    print(countdown, " ");
+    countdown = countdown - 1;
+}
+
+// Nested while loops
+print("Multiplication table (3x3):");
+i = 1;
+while (i <= 3) {
+    j = 1;
+    while (j <= 3) {
+        product = i * j;
+        print(product, " ");
+        j = j + 1;
+    }
+    i = i + 1;
+}
+
+// While with break-like logic (sum until > 100)
+print("Sum until > 100: ");
+sum = 0;
+num = 1;
+while (sum <= 100) {
+    sum = sum + num;
+    num = num + 1;
+}
+print(sum, " (first sum > 100)");
+
+/* =============================================================================
+   SECTION 7: FUNCTIONS - BASIC
+   ============================================================================= */
+print("SECTION 7: Functions - Basic");
+print("----------------------------");
+
+// Function with no parameters
+func greet() {
+    return 42;
+}
+
+greeting = greet();
+print("No params: ", greeting, " (expected: 42)");
+
+// Function with one parameter
+func square(n) {
+    return n * n;
+}
+
+sq5 = square(5);
+print("One param - square(5): ", sq5, " (expected: 25)");
+
+// Function with two parameters
+func add(a, b) {
+    return a + b;
+}
+
+sum12 = add(7, 5);
+print("Two params - add(7,5): ", sum12, " (expected: 12)");
+
+// Function with three parameters
+func volume(length, width, height) {
+    return length * width * height;
+}
+
+vol = volume(3, 4, 5);
+print("Three params - volume(3,4,5): ", vol, " (expected: 60)");
+
+// Function returning float
+func divide(a, b) {
+    return a / b;
+}
+
+divResult = divide(22, 7);
+print("Float return - divide(22,7): ", divResult, " (expected: 3.xxx)");
+
+/* =============================================================================
+   SECTION 8: FUNCTIONS - RECURSION
+   ============================================================================= */
+print("SECTION 8: Functions - Recursion");
+print("--------------------------------");
+
+// Factorial
+func factorial(n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+fact5 = factorial(5);
+print("factorial(5): ", fact5, " (expected: 120)");
+
+fact7 = factorial(7);
+print("factorial(7): ", fact7, " (expected: 5040)");
+
+// Fibonacci
+func fibonacci(n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+fib8 = fibonacci(8);
+print("fibonacci(8): ", fib8, " (expected: 21)");
+
+fib10 = fibonacci(10);
+print("fibonacci(10): ", fib10, " (expected: 55)");
+
+// Sum of digits (recursive)
+func sumDigits(n) {
+    if (n < 10) {
+        return n;
+    }
+    return (n % 10) + sumDigits(n / 10);
+}
+
+digitSum = sumDigits(12345);
+print("sumDigits(12345): ", digitSum, " (expected: 15)");
+
+/* =============================================================================
+   SECTION 9: FUNCTIONS - NESTED CALLS
+   ============================================================================= */
+print("SECTION 9: Functions - Nested Calls");
+print("-----------------------------------");
+
+func double(n) {
+    return n * 2;
+}
+
+func triple(n) {
+    return n * 3;
+}
+
+// Nested function calls
+nested1 = double(triple(5));
+print("double(triple(5)): ", nested1, " (expected: 30)");
+
+// Triple nesting
+nested2 = double(double(double(3)));
+print("double(double(double(3))): ", nested2, " (expected: 24)");
+
+// Mix with arithmetic
+nested3 = add(square(4), square(3));
+print("add(square(4), square(3)): ", nested3, " (expected: 25)");
+
+// Complex nesting
+func compute(a, b, c) {
+    return a * b + c;
+}
+
+nested4 = compute(square(2), triple(3), double(5));
+print("compute(square(2), triple(3), double(5)): ", nested4, " (expected: 46)");
+
+/* =============================================================================
+   SECTION 10: FUNCTIONS - MULTIPLE RETURNS
+   ============================================================================= */
+print("SECTION 10: Functions - Multiple Returns");
+print("----------------------------------------");
+
+func classify(n) {
+    if (n < 0) {
+        return -1;
+    }
+    if (n == 0) {
+        return 0;
+    }
+    return 1;
+}
+
+class1 = classify(-10);
+print("classify(-10): ", class1, " (expected: -1)");
+
+class2 = classify(0);
+print("classify(0): ", class2, " (expected: 0)");
+
+class3 = classify(42);
+print("classify(42): ", class3, " (expected: 1)");
+
+// Early return
+func findFirst(target) {
+    i = 0;
+    while (i < 100) {
+        if (i == target) {
+            return i;
+        }
+        i = i + 1;
+    }
+    return -1;
+}
+
+found = findFirst(17);
+print("findFirst(17): ", found, " (expected: 17)");
+
+/* =============================================================================
+   SECTION 11: BUILT-IN FUNCTIONS
+   ============================================================================= */
+print("SECTION 11: Built-in Functions");
+print("------------------------------");
+
+// abs()
+absNeg = abs(-42);
+print("abs(-42): ", absNeg, " (expected: 42)");
+
+absPos = abs(17);
+print("abs(17): ", absPos, " (expected: 17)");
+
+absZero = abs(0);
+print("abs(0): ", absZero, " (expected: 0)");
+
+// min()
+minVal = min(15, 23);
+print("min(15, 23): ", minVal, " (expected: 15)");
+
+minNeg = min(-5, -10);
+print("min(-5, -10): ", minNeg, " (expected: -10)");
+
+// max()
+maxVal = max(15, 23);
+print("max(15, 23): ", maxVal, " (expected: 23)");
+
+maxNeg = max(-5, -10);
+print("max(-5, -10): ", maxNeg, " (expected: -5)");
+
+// random() - just test it runs
+rand1 = random(100);
+print("random(100): ", rand1, " (should be 0-99)");
+
+// Nested built-in calls
+nestedBuiltin = abs(min(-10, -5));
+print("abs(min(-10, -5)): ", nestedBuiltin, " (expected: 10)");
+
+/* =============================================================================
+   SECTION 12: LOCAL VARIABLES
+   ============================================================================= */
+print("SECTION 12: Local Variables");
+print("---------------------------");
+
+globalX = 100;
+
+func testLocal() {
+    localX = 42;
+    return localX;
+}
+
+resultLocal = testLocal();
+print("Function local: ", resultLocal, " (expected: 42)");
+print("Global unchanged: ", globalX, " (expected: 100)");
+
+// Parameters are local
+globalA = 999;
+
+func testParam(globalA) {
+    return globalA * 2;
+}
+
+resultParam = testParam(5);
+print("Param result: ", resultParam, " (expected: 10)");
+print("Global A unchanged: ", globalA, " (expected: 999)");
+
+// Multiple local variables
+func multiLocal(a, b) {
+    temp1 = a * 2;
+    temp2 = b * 3;
+    return temp1 + temp2;
+}
+
+multiResult = multiLocal(4, 5);
+print("Multiple locals: ", multiResult, " (expected: 23)");
+
+/* =============================================================================
+   SECTION 13: MACROS
+   ============================================================================= */
+print("SECTION 13: Macros");
+print("------------------");
+
+#define PI 3.14159
+#define MAX_SIZE 1000
+
+print("PI macro: ", PI, " (expected: 3.14159)");
+print("MAX_SIZE: ", MAX_SIZE, " (expected: 1000)");
+
+// Macro in expression
+radius = 5;
+area = PI * radius * radius;
+print("Circle area (r=5): ", area, " (expected: ~78.54)");
+
+// Macro in condition
+if (MAX_SIZE > 500) {
+    print("MAX_SIZE check: PASS");
+}
+
+/* =============================================================================
+   SECTION 14: STRING OPERATIONS
+   ============================================================================= */
+print("SECTION 14: String Operations");
+print("-----------------------------");
+
+str1 = "Hello";
+str2 = "World";
+
+// String concatenation via print
+print("Concatenation: ", str1, " ", str2);
+
+// Mixed string and number
+name = "Value";
+value = 42;
+print("Mixed: ", name, " = ", value);
+
+/* =============================================================================
+   SECTION 15: EDGE CASES AND STRESS TESTS
+   ============================================================================= */
+print("SECTION 15: Edge Cases and Stress Tests");
+print("---------------------------------------");
+
+// Large numbers
+largeNum = 999999;
+print("Large number: ", largeNum);
+
+// Deep recursion (not too deep to avoid stack overflow)
+deepFact = factorial(10);
+print("factorial(10): ", deepFact, " (expected: 3628800)");
+
+// Many parameters
+func sixParams(a, b, c, d, e, f) {
+    return a + b + c + d + e + f;
+}
+
+sixSum = sixParams(1, 2, 3, 4, 5, 6);
+print("Six params sum: ", sixSum, " (expected: 21)");
+
+// Complex expression
+complex = ((10 + 5) * 3 - 7) / 2 + 4;
+print("Complex expr: ", complex, " (expected: 27)");
+
+// Deep nesting of operators
+deepNest = 1 + 2 * 3 + 4 * 5 - 6 / 2;
+print("Deep operator nest: ", deepNest, " (expected: 24)");
+
+/* =============================================================================
+   SECTION 16: OPTIMIZATION TESTS
+   ============================================================================= */
+print("SECTION 16: Optimization Tests");
+print("------------------------------");
+
+// Constant folding
+constFold1 = 10 + 5;
+print("Const fold (10+5): ", constFold1, " (expected: 15)");
+
+constFold2 = 20 * 3;
+print("Const fold (20*3): ", constFold2, " (expected: 60)");
+
+// Identity optimization
+identX = 42;
+identAdd = identX + 0;
+print("Identity (x+0): ", identAdd, " (expected: 42)");
+
+identMul = identX * 1;
+print("Identity (x*1): ", identMul, " (expected: 42)");
+
+identSub = identX - 0;
+print("Identity (x-0): ", identSub, " (expected: 42)");
+
+identDiv = identX / 1;
+print("Identity (x/1): ", identDiv, " (expected: 42)");
+
+identZero = identX * 0;
+print("Identity (x*0): ", identZero, " (expected: 0)");
+
+// Works well till here
+
+/* =============================================================================
+   SECTION 17: REAL-WORLD ALGORITHMS
+   ============================================================================= */
+print("SECTION 17: Real-world Algorithms");
+print("---------------------------------");
+
+// GCD (Greatest Common Divisor)
+func gcd(a, b) {
+    while (b != 0) {
+        temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+gcdResult = gcd(48, 18);
+print("GCD(48, 18): ", gcdResult, " (expected: 6)");
+
+// Prime checker
+func isPrime(n) {
+    if (n <= 1) {
+        return 0;
+    }
+    if (n == 2) {
+        return 1;
+    }
+    i = 2;
+    while (i * i <= n) {
+        if (n % i == 0) {
+            return 0;
+        }
+        i = i + 1;
+    }
+    return 1;
+}
+
+prime17 = isPrime(17);
+print("isPrime(17): ", prime17, " (expected: 1)");
+
+prime18 = isPrime(18);
+print("isPrime(18): ", prime18, " (expected: 0)");
+
+// Power function
+func power(base, exp) {
+    if (exp == 0) {
+        return 1;
+    }
+    result = 1;
+    i = 0;
+    while (i < exp) {
+        result = result * base;
+        i = i + 1;
+    }
+    return result;
+}
+
+pow2_10 = power(2, 10);
+print("power(2, 10): ", pow2_10, " (expected: 1024)");
+
+pow3_4 = power(3, 4);
+print("power(3, 4): ", pow3_4, " (expected: 81)");
+
+/* =============================================================================
+   FINAL SUMMARY
+   ============================================================================= */
+print("COMPREHENSIVE TEST SUITE COMPLETE");
+print("---------------------------------");
+print("All sections executed successfully!");
+print("Verify output matches expected values.");

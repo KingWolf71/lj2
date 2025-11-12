@@ -6,7 +6,12 @@
       "Bash(powershell -Command:*)",
       "Bash(del \"D:\\OneDrive\\WIP\\Sources\\Intense.2020\\lj2\\Examples\\19 test quicksort.lj\")",
       "Bash(cat:*)",
-      "Bash(nul)"
+      "Bash(nul)",
+      "Bash(git checkout:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File refactor-globals.ps1:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\OneDrive\\WIP\\Sources\\Intense.2020\\lj2\\add-assert-prints.ps1\")"
     ],
     "deny": [],
     "ask": []
